@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+# use jq to filter based on certain properties
+
+image() {
+  local id="$1"
+  jq --arg id "$id" '[.features[] | select(.properties.image_id == "$id.tif")]' xView_train.geojson > "$id.geojson"
+}
+
+"$@"
