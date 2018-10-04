@@ -18,6 +18,9 @@ hacking on the xview dataset
 - https://towardsdatascience.com/deep-learning-with-apache-spark-part-2-2a2938a36d35
 - https://github.com/cloudmesh/example-project-nist-fingerprint-matching
 - https://medium.com/linagora-engineering/making-image-classification-simple-with-spark-deep-learning-f654a8b876b8
+- oshinko
+  - https://github.com/radanalyticsio
+  - https://www.youtube.com/watch?v=IrHTeco4r_Q
 
 ### other references
 - red blood cell detection
