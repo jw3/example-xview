@@ -40,6 +40,8 @@ hacking on the xview dataset
 ### datasets
 - https://www.nist.gov/itl/iad/image-group/resources/biometric-special-databases-and-software
 - https://github.com/cosmicad/dataset
+- http://www.cvlibs.net/datasets/kitti/
+- 
 
 ### xview class labels
 
