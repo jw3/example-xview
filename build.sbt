@@ -40,6 +40,8 @@ lazy val commonSettings = Seq(
       "com.iheart" %% "ficus" % "1.4.3",
       "com.esri.arcgisruntime" % "arcgis-java" % "100.2.1",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
+      "com.github.jw3" %% "geotrellis-raster" % "12.2.0.0",
+      "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
       "org.scalactic" %% "scalactic" % scalatestVersion % Test,
       "org.scalatest" %% "scalatest" % scalatestVersion % Test,
