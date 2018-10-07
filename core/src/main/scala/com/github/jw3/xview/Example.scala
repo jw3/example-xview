@@ -1,6 +1,7 @@
 package com.github.jw3.xview
 
 import java.nio.file.{Path, Paths}
+import java.time.{Duration, Instant}
 
 import com.github.jw3.xview.ExampleUtils._
 import com.typesafe.scalalogging.LazyLogging
@@ -16,21 +17,29 @@ import geotrellis.vector.{Feature, Polygon}
 import spray.json.DefaultJsonProtocol._
 import spray.json.RootJsonFormat
 
-case class FeatureData(feature_id: Int)
+case class FeatureData(feature_id: Int, type_id: Int)
 object FeatureData {
-  implicit val format: RootJsonFormat[FeatureData] = jsonFormat1(FeatureData.apply)
+  implicit val format: RootJsonFormat[FeatureData] = jsonFormat2(FeatureData.apply)
 }
 
 object Example extends App with LazyLogging {
   implicit val wd: Path = Paths.get(sys.env.getOrElse("WORKING_DIR", sys.env.getOrElse("HOME", "/tmp")))
   val sourceTile = 100
 
+  val start = Instant.now
+
   GeoJson
     .fromFile[List[Feature[Polygon, FeatureData]]](s"$wd/data/$sourceTile.geojson")
-    .take(25)
+    .zipWithIndex
     .foreach { f ⇒
-      val fid = f.data.feature_id
-      val chipExtent = f.geom.envelope
+      val fid = f._1.data.feature_id
+      val ftype = f._1.data.type_id
+      val chipExtent = f._1.geom.envelope
+
+      {
+        val idx = f._2.toString.padTo(4, " ").mkString
+        println(s"$idx\t$ftype\t$fid")
+      }
 
       // read in a tif
       val tiff: MultibandGeoTiff = GeoTiffReader.readMultiband(s"$wd/data/$sourceTile.tif")
@@ -49,14 +58,16 @@ object Example extends App with LazyLogging {
       val chipTiff = MultibandGeoTiff(chip, chipExtent, tiff.crs)
       GeoTiffWriter.write(
         chipTiff,
-        s"$wd/chips/$fid.chip.tif"
+        s"$wd/chips/$fid-$ftype-chip.tif"
       )
 
       //// scale
 
-      writeZoomed(s"$fid.large.chip", chipTiff)(_.zoomIn())
-      writeZoomed(s"$fid.small.chip", chipTiff)(_.zoomOut())
+      writeZoomed(s"$fid-$ftype-large.chip", chipTiff)(_.zoomIn())
+      writeZoomed(s"$fid-$ftype-small.chip", chipTiff)(_.zoomOut())
     }
+
+  println(Duration.between(start, Instant.now))
 }
 
 object ExampleUtils {
