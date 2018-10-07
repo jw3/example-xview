@@ -9,51 +9,54 @@ import geotrellis.raster.io.geotiff.writer.GeoTiffWriter
 import geotrellis.raster.io.geotiff.{AutoHigherResolution, GeoTiffMultibandTile, MultibandGeoTiff}
 import geotrellis.raster.resample.NearestNeighbor
 import geotrellis.raster.{CellSize, RasterExtent}
-import geotrellis.vector.Polygon
-import geotrellis.vector.io.wkt.WKT
+import geotrellis.vector.io.json.FeatureFormats._
+import geotrellis.vector.io.json.GeoJson
+import geotrellis.vector.io.json.GeometryFormats._
+import geotrellis.vector.{Feature, Polygon}
+import spray.json.DefaultJsonProtocol._
+import spray.json.RootJsonFormat
+
+case class FeatureData(feature_id: Int)
+object FeatureData {
+  implicit val format: RootJsonFormat[FeatureData] = jsonFormat1(FeatureData.apply)
+}
 
 object Example extends App with LazyLogging {
   implicit val wd: Path = Paths.get(sys.env.getOrElse("WORKING_DIR", sys.env.getOrElse("HOME", "/tmp")))
+  val sourceTile = 100
 
-  // take some wkt from 100 training data 1016347
-  val wkt =
-    """
-      |POLYGON((
-      |10.25204021977258684 36.86410345210712336,
-      |10.25204021977258684 36.86432007437027636,
-      |10.25229550558354141 36.86432007437027636,
-      |10.25229550558354141 36.86410345210712336,
-      |10.25204021977258684 36.86410345210712336
-      |))
-    """.stripMargin
+  GeoJson
+    .fromFile[List[Feature[Polygon, FeatureData]]](s"$wd/data/$sourceTile.geojson")
+    .take(25)
+    .foreach { f ⇒
+      val fid = f.data.feature_id
+      val chipExtent = f.geom.envelope
 
-  val chipBounds = WKT.read(wkt).asInstanceOf[Polygon]
-  val chipExtent = chipBounds.envelope
+      // read in a tif
+      val tiff: MultibandGeoTiff = GeoTiffReader.readMultiband(s"$wd/data/$sourceTile.tif")
 
-  // read in a tif
-  val tiff: MultibandGeoTiff = GeoTiffReader.readMultiband(s"$wd/100.tif")
+      // create a tile
+      val tile = GeoTiffMultibandTile.apply(tiff.tile)
 
-  // create a tile
-  val tile = GeoTiffMultibandTile.apply(tiff.tile)
+      ///// chip
 
-  ///// chip
+      // crop to the chip extent
+      val chip = GeoTiffMultibandTile(
+        tile.crop(tiff.extent, chipExtent)
+      )
 
-  // crop to the chip extent
-  val chip = GeoTiffMultibandTile(
-    tile.crop(tiff.extent, chipExtent)
-  )
+      // back to a tiff and write
+      val chipTiff = MultibandGeoTiff(chip, chipExtent, tiff.crs)
+      GeoTiffWriter.write(
+        chipTiff,
+        s"$wd/chips/$fid.chip.tif"
+      )
 
-  // back to a tiff and write
-  val chipTiff = MultibandGeoTiff(chip, chipExtent, tiff.crs)
-  GeoTiffWriter.write(
-    chipTiff,
-    s"$wd/100.clipped.tif"
-  )
+      //// scale
 
-  //// scale
-
-  writeZoomed("100.clipped.large", chipTiff)(_.zoomIn())
-  writeZoomed("100.clipped.small", chipTiff)(_.zoomOut())
+      writeZoomed(s"$fid.large.chip", chipTiff)(_.zoomIn())
+      writeZoomed(s"$fid.small.chip", chipTiff)(_.zoomOut())
+    }
 }
 
 object ExampleUtils {
@@ -68,7 +71,7 @@ object ExampleUtils {
     // back to a tiff and write
     GeoTiffWriter.write(
       MultibandGeoTiff(zoomed.tile, zoomed.extent, tiff.crs),
-      s"$wd/$fname.tif"
+      s"$wd/chips/$fname.tif"
     )
   }
 
