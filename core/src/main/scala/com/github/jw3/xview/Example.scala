@@ -1,5 +1,8 @@
 package com.github.jw3.xview
 
+import java.nio.file.{Path, Paths}
+
+import com.github.jw3.xview.ExampleUtils._
 import com.typesafe.scalalogging.LazyLogging
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader
 import geotrellis.raster.io.geotiff.writer.GeoTiffWriter
@@ -10,7 +13,7 @@ import geotrellis.vector.Polygon
 import geotrellis.vector.io.wkt.WKT
 
 object Example extends App with LazyLogging {
-  val wd = sys.env.getOrElse("WORKING_DIR", sys.env.get("HOME"))
+  implicit val wd: Path = Paths.get(sys.env.getOrElse("WORKING_DIR", sys.env.getOrElse("HOME", "/tmp")))
 
   // take some wkt from 100 training data 1016347
   val wkt =
@@ -49,15 +52,15 @@ object Example extends App with LazyLogging {
 
   //// scale
 
-  writeZoomed("inz", chipTiff)(_.zoomIn())
-  writeZoomed("outz", chipTiff)(_.zoomOut())
+  writeZoomed("100.clipped.large", chipTiff)(_.zoomIn())
+  writeZoomed("100.clipped.small", chipTiff)(_.zoomOut())
+}
 
-  //
-
-  def writeZoomed(id: String, tiff: MultibandGeoTiff)(z: CellSize ⇒ CellSize): Unit = {
+object ExampleUtils {
+  def writeZoomed(fname: String, tiff: MultibandGeoTiff)(z: CellSize ⇒ CellSize)(implicit wd: Path): Unit = {
     // scale and resample the raster
-    val zoomed = chipTiff.resample(
-      RasterExtent(chipExtent, z(tiff.cellSize)),
+    val zoomed = tiff.resample(
+      RasterExtent(tiff.extent, z(tiff.cellSize)),
       NearestNeighbor,
       AutoHigherResolution
     )
@@ -65,7 +68,7 @@ object Example extends App with LazyLogging {
     // back to a tiff and write
     GeoTiffWriter.write(
       MultibandGeoTiff(zoomed.tile, zoomed.extent, tiff.crs),
-      s"$wd/100.clipped.$id.tif"
+      s"$wd/$fname.tif"
     )
   }
 
