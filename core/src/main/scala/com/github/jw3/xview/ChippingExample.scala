@@ -32,15 +32,25 @@ object Example extends App with LazyLogging {
 
   GeoJson
     .fromFile[List[Feature[Polygon, FeatureData]]](geojson.toString)
-    .zipWithIndex
-    .par
-    .foreach(t ⇒ chipFeature(t._2, t._1))
+    .groupBy(_.data.image_id)
+    .foreach { t ⇒
+      logger.info("{} chips in {}", Int.box(t._2.size), t._1)
+
+      // read in a tif
+      val tiff: MultibandGeoTiff = GeoTiffReader.readMultiband(s"$wd/data/${t._1}")
+      // create a tile
+      val tile = GeoTiffMultibandTile(tiff.tile)
+      // generate chips
+      t._2.zipWithIndex.par.foreach(f ⇒ chipFeature(f._2, f._1, tiff, tile))
+    }
 
   println(Duration.between(start, Instant.now))
 }
 
 object ExampleUtils {
-  def chipFeature(idx: Int, f: Feature[Polygon, FeatureData])(implicit wd: Path): Unit = {
+  def chipFeature(idx: Int, f: Feature[Polygon, FeatureData], tiff: MultibandGeoTiff, tile: GeoTiffMultibandTile)(
+      implicit wd: Path): Unit = {
+
     val fid = f.data.feature_id
     val ftype = f.data.type_id
     val chipExtent = f.geom.envelope
@@ -49,12 +59,6 @@ object ExampleUtils {
       val idxStr: String = "% 4d".format(idx)
       println(s"$idxStr\t$ftype\t$fid")
     }
-
-    // read in a tif
-    val tiff: MultibandGeoTiff = GeoTiffReader.readMultiband(s"$wd/data/${f.data.image_id}")
-
-    // create a tile
-    val tile = GeoTiffMultibandTile(tiff.tile)
 
     ///// chip
 
