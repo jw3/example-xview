@@ -7,7 +7,7 @@ import com.github.jw3.xview.ExampleUtils._
 import com.typesafe.scalalogging.LazyLogging
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader
 import geotrellis.raster.io.geotiff.writer.GeoTiffWriter
-import geotrellis.raster.io.geotiff.{AutoHigherResolution, GeoTiffMultibandTile, MultibandGeoTiff}
+import geotrellis.raster.io.geotiff.{AutoHigherResolution, GeoTiffMultibandTile, GeoTiffOptions, MultibandGeoTiff}
 import geotrellis.raster.resample.NearestNeighbor
 import geotrellis.raster.{CellSize, RasterExtent}
 import geotrellis.vector.io.json.FeatureFormats._
@@ -45,7 +45,7 @@ object Example extends App with LazyLogging {
       val tiff: MultibandGeoTiff = GeoTiffReader.readMultiband(s"$wd/data/$sourceTile.tif")
 
       // create a tile
-      val tile = GeoTiffMultibandTile.apply(tiff.tile)
+      val tile = GeoTiffMultibandTile(tiff.tile)
 
       ///// chip
 
@@ -54,8 +54,9 @@ object Example extends App with LazyLogging {
         tile.crop(tiff.extent, chipExtent)
       )
 
-      // back to a tiff and write
-      val chipTiff = MultibandGeoTiff(chip, chipExtent, tiff.crs)
+      // back to a tiff and write w/ same color as original
+      val chipOpts = GeoTiffOptions.DEFAULT.copy(colorSpace = tiff.options.colorSpace)
+      val chipTiff = MultibandGeoTiff(chip, chipExtent, tiff.crs, chipOpts)
       GeoTiffWriter.write(
         chipTiff,
         s"$wd/chips/$fid-$ftype-chip.tif"
@@ -81,7 +82,7 @@ object ExampleUtils {
 
     // back to a tiff and write
     GeoTiffWriter.write(
-      MultibandGeoTiff(zoomed.tile, zoomed.extent, tiff.crs),
+      MultibandGeoTiff(zoomed.tile, zoomed.extent, tiff.crs, tiff.options),
       s"$wd/chips/$fname.tif"
     )
   }
