@@ -17,61 +17,66 @@ import geotrellis.vector.{Feature, Polygon}
 import spray.json.DefaultJsonProtocol._
 import spray.json.RootJsonFormat
 
-case class FeatureData(feature_id: Int, type_id: Int)
+case class FeatureData(feature_id: Int, type_id: Int, image_id: String)
 object FeatureData {
-  implicit val format: RootJsonFormat[FeatureData] = jsonFormat2(FeatureData.apply)
+  implicit val format: RootJsonFormat[FeatureData] = jsonFormat3(FeatureData.apply)
 }
 
 object Example extends App with LazyLogging {
   implicit val wd: Path = Paths.get(sys.env.getOrElse("WORKING_DIR", sys.env.getOrElse("HOME", "/tmp")))
-  val sourceTile = 100
+  val geojson = wd.resolve("data/100.geojson")
+
+  logger.info("loading features from {}", geojson)
 
   val start = Instant.now
 
   GeoJson
-    .fromFile[List[Feature[Polygon, FeatureData]]](s"$wd/data/$sourceTile.geojson")
+    .fromFile[List[Feature[Polygon, FeatureData]]](geojson.toString)
     .zipWithIndex
-    .foreach { f ⇒
-      val fid = f._1.data.feature_id
-      val ftype = f._1.data.type_id
-      val chipExtent = f._1.geom.envelope
-
-      {
-        val idx = f._2.toString.padTo(4, " ").mkString
-        println(s"$idx\t$ftype\t$fid")
-      }
-
-      // read in a tif
-      val tiff: MultibandGeoTiff = GeoTiffReader.readMultiband(s"$wd/data/$sourceTile.tif")
-
-      // create a tile
-      val tile = GeoTiffMultibandTile(tiff.tile)
-
-      ///// chip
-
-      // crop to the chip extent
-      val chip = GeoTiffMultibandTile(
-        tile.crop(tiff.extent, chipExtent)
-      )
-
-      // back to a tiff and write w/ same color as original
-      val chipOpts = GeoTiffOptions.DEFAULT.copy(colorSpace = tiff.options.colorSpace)
-      val chipTiff = MultibandGeoTiff(chip, chipExtent, tiff.crs, chipOpts)
-      GeoTiffWriter.write(
-        chipTiff,
-        s"$wd/chips/$fid-$ftype-chip.tif"
-      )
-
-      //// scale
-
-      writeZoomed(s"$fid-$ftype-large.chip", chipTiff)(_.zoomIn())
-      writeZoomed(s"$fid-$ftype-small.chip", chipTiff)(_.zoomOut())
-    }
+    .par
+    .foreach(t ⇒ chipFeature(t._2, t._1))
 
   println(Duration.between(start, Instant.now))
 }
 
 object ExampleUtils {
+  def chipFeature(idx: Int, f: Feature[Polygon, FeatureData])(implicit wd: Path): Unit = {
+    val fid = f.data.feature_id
+    val ftype = f.data.type_id
+    val chipExtent = f.geom.envelope
+
+    {
+      val idxStr: String = "% 4d".format(idx)
+      println(s"$idxStr\t$ftype\t$fid")
+    }
+
+    // read in a tif
+    val tiff: MultibandGeoTiff = GeoTiffReader.readMultiband(s"$wd/data/${f.data.image_id}")
+
+    // create a tile
+    val tile = GeoTiffMultibandTile(tiff.tile)
+
+    ///// chip
+
+    // crop to the chip extent
+    val chip = GeoTiffMultibandTile(
+      tile.crop(tiff.extent, chipExtent)
+    )
+
+    // back to a tiff and write w/ same color as original
+    val chipOpts = GeoTiffOptions.DEFAULT.copy(colorSpace = tiff.options.colorSpace)
+    val chipTiff = MultibandGeoTiff(chip, chipExtent, tiff.crs, chipOpts)
+    GeoTiffWriter.write(
+      chipTiff,
+      s"$wd/chips/$fid-$ftype-chip.tif"
+    )
+
+    //// scale
+
+    writeZoomed(s"$fid-$ftype-large.chip", chipTiff)(_.zoomIn())
+    writeZoomed(s"$fid-$ftype-small.chip", chipTiff)(_.zoomOut())
+  }
+
   def writeZoomed(fname: String, tiff: MultibandGeoTiff)(z: CellSize ⇒ CellSize)(implicit wd: Path): Unit = {
     // scale and resample the raster
     val zoomed = tiff.resample(
