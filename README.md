@@ -5,6 +5,8 @@ hacking on the xview dataset
 ### xview references
 - http://xviewdataset.org
 - https://github.com/DIUx-xView
+- https://challenge.xviewdataset.org/baseline
+- https://challenge.xviewdataset.org/tutorial
 - https://github.com/ultralytics/xview-docker
 - https://github.com/PlatformStories/train-cnn-classifier
 - https://medium.com/picterra/the-xview-dataset-and-baseline-results-5ab4a1d0f47f
@@ -38,6 +40,7 @@ hacking on the xview dataset
 - https://skymind.ai/wiki/convolutional-network
 
 ### datasets
+- https://github.com/DIUx-xView/baseline/releases
 - https://www.nist.gov/itl/iad/image-group/resources/biometric-special-databases-and-software
 - https://github.com/cosmicad/dataset
 - http://www.cvlibs.net/datasets/kitti/
@@ -107,3 +110,16 @@ hacking on the xview dataset
 |91|Shipping Container|
 |93|Pylon|
 |94|Tower|
+
+### nvidia docker
+- install nvidia-docker
+  - https://github.com/NVIDIA/nvidia-docker/wiki/Installation-(version-2.0)#prerequisites
+- install cuda
+  - https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html
+  - https://developer.nvidia.com/cuda-downloads
+- register for nvidia registry
+  - https://ngc.nvidia.com/registry
+- run containers with `nvidia-docker`
+  - `nvidia-docker run --rm nvidia/cuda nvidia-smi`
+- debug issues with
+  - `nvidia-container-cli -k -d /dev/tty info`
