@@ -123,3 +123,12 @@ hacking on the xview dataset
   - `nvidia-docker run --rm nvidia/cuda nvidia-smi`
 - debug issues with
   - `nvidia-container-cli -k -d /dev/tty info`
+
+### segmenting labels
+
+The json is easier to work with when partitioned
+
+`jq '[.features[] | select(.properties.image_id == "100.tif")]' xView_train.geojson`
+
+`for f in *.tif; do echo $f; jq --arg f "$f" '[.features[] | select(.properties.image_id == $f)]' ../xView_train.geojson > $f.geojson; done`
+
