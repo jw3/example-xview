@@ -1,15 +1,15 @@
 lazy val `example-xview` =
   project
     .in(file("."))
-    .aggregate(app)
+    .aggregate(chipper)
     .settings(commonSettings: _*)
     .enablePlugins(GitVersioning)
 
-lazy val app =
+lazy val chipper =
   project
-    .in(file("core"))
+    .in(file("chipper"))
     .settings(commonSettings: _*)
-    .settings(name := "example-xview-app")
+    .settings(name := "chipper")
     .enablePlugins(GitVersioning)
 
 lazy val commonSettings = Seq(
@@ -37,11 +37,9 @@ lazy val commonSettings = Seq(
     lazy val scalatestVersion = "3.0.3"
 
     Seq(
-      "com.iheart" %% "ficus" % "1.4.3",
-      "com.esri.arcgisruntime" % "arcgis-java" % "100.2.1",
-      "ch.qos.logback" % "logback-classic" % "1.2.3",
       "com.github.jw3" %% "geotrellis-raster" % "12.2.0.0",
       "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
+      "ch.qos.logback" % "logback-classic" % "1.2.3",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
       "org.scalactic" %% "scalactic" % scalatestVersion % Test,
       "org.scalatest" %% "scalatest" % scalatestVersion % Test,

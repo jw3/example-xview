@@ -22,7 +22,7 @@ object FeatureData {
   implicit val format: RootJsonFormat[FeatureData] = jsonFormat3(FeatureData.apply)
 }
 
-object Example extends App with LazyLogging {
+object Chipper extends App with LazyLogging {
   implicit val wd: Path = Paths.get(sys.env.getOrElse("WORKING_DIR", sys.env.getOrElse("HOME", "/tmp")))
   val geojson = wd.resolve("data/100.geojson")
 
