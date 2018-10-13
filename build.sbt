@@ -37,6 +37,8 @@ lazy val commonSettings = Seq(
     lazy val scalatestVersion = "3.0.3"
 
     Seq(
+      "com.typesafe.akka" %% "akka-stream" % "2.5.17",
+      "com.amazonaws" % "aws-java-sdk-s3" % "1.11.83",
       "com.github.jw3" %% "geotrellis-raster" % "12.2.0.0",
       "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
       "ch.qos.logback" % "logback-classic" % "1.2.3",
