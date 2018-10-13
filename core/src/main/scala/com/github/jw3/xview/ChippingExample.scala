@@ -1,6 +1,6 @@
 package com.github.jw3.xview
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.{Files, Path, Paths}
 import java.time.{Duration, Instant}
 
 import com.github.jw3.xview.ExampleUtils._
@@ -67,21 +67,24 @@ object ExampleUtils {
       tile.crop(tiff.extent, chipExtent)
     )
 
+    val out = Paths.get(s"$wd/train/$ftype")
+    Files.createDirectories(out)
+
     // back to a tiff and write w/ same color as original
     val chipOpts = GeoTiffOptions.DEFAULT.copy(colorSpace = tiff.options.colorSpace)
     val chipTiff = MultibandGeoTiff(chip, chipExtent, tiff.crs, chipOpts)
     GeoTiffWriter.write(
       chipTiff,
-      s"$wd/chips/$fid-$ftype-chip.tif"
+      out.resolve(s"$fid.tif").toString
     )
 
     //// scale
 
-    writeZoomed(s"$fid-$ftype-large.chip", chipTiff)(_.zoomIn())
-    writeZoomed(s"$fid-$ftype-small.chip", chipTiff)(_.zoomOut())
+    writeZoomed(out.resolve(s"$fid.large.tif"), chipTiff)(_.zoomIn())
+    writeZoomed(out.resolve(s"$fid.small.tif"), chipTiff)(_.zoomOut())
   }
 
-  def writeZoomed(fname: String, tiff: MultibandGeoTiff)(z: CellSize ⇒ CellSize)(implicit wd: Path): Unit = {
+  def writeZoomed(path: Path, tiff: MultibandGeoTiff)(z: CellSize ⇒ CellSize)(implicit wd: Path): Unit = {
     // scale and resample the raster
     val zoomed = tiff.resample(
       RasterExtent(tiff.extent, z(tiff.cellSize)),
@@ -92,7 +95,7 @@ object ExampleUtils {
     // back to a tiff and write
     GeoTiffWriter.write(
       MultibandGeoTiff(zoomed.tile, zoomed.extent, tiff.crs, tiff.options),
-      s"$wd/chips/$fname.tif"
+      path.toString
     )
   }
 
