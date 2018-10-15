@@ -65,6 +65,7 @@ object Chip extends App with LazyLogging {
       case Array(t, b) ⇒ (t, b, "")
       case Array(t, b, p) ⇒ (t, b, p)
       case Array("-cfg") ⇒
+        println(s"v${BuildInfo.version}")
         println(s"working directory set to $wd")
         println(s"s3 endpoint set to ${cfg.endpoint}")
         sys.exit(1)

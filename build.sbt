@@ -10,8 +10,9 @@ lazy val chipper =
     .in(file("chipper"))
     .settings(commonSettings: _*)
     .settings(name := "chip")
+    .settings(buildinfoSettings: _*)
     .settings(debianSettings: _*)
-    .enablePlugins(JavaServerAppPackaging, DebianPlugin, DockerPlugin, GitVersioning)
+    .enablePlugins(JavaServerAppPackaging, DebianPlugin, DockerPlugin, GitVersioning, BuildInfoPlugin)
 
 lazy val commonSettings = Seq(
   organization := "com.github.jw3",
@@ -58,4 +59,10 @@ lazy val dockerSettings = Seq(
 lazy val debianSettings = Seq(
   maintainer in Debian := "jw3",
   debianPackageDependencies := Seq("java8-runtime-headless")
+)
+
+lazy val buildinfoSettings = Seq(
+  buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+  buildInfoPackage := "com.github.jw3.xview",
+  buildInfoUsePackageAsPath := true
 )
