@@ -132,3 +132,18 @@ The json is easier to work with when partitioned
 
 `for f in *.tif; do echo $f; jq --arg f "$f" '[.features[] | select(.properties.image_id == $f)]' ../xView_train.geojson > $f.geojson; done`
 
+### using minio with digits
+
+Have to adjust the boto library configuration to use the non-subdomain s3 urls
+
+Mount this as `/etc/boto.cfg`
+
+``` 
+[s3]
+calling_format=boto.s3.connection.OrdinaryCallingFormat
+```
+
+### digits image formats
+
+- https://github.com/NVIDIA/DIGITS/blob/master/docs/ImageFolderFormat.md
+- PNG, JPEG, BMP and PPM
