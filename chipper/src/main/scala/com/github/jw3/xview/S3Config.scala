@@ -29,6 +29,6 @@ object S3Config {
     val region: Region = RegionUtils.getRegion("us-east-1")
     def accessKey: Option[String] = Some(ak)
     def secretKey: Option[String] = Some(sk)
-    def endpoint: Option[String] = Some("http://localhost:3000")
+    def endpoint: Option[String] = Some(sys.env.getOrElse("S3_URI", "http://localhost:9000"))
   }
 }

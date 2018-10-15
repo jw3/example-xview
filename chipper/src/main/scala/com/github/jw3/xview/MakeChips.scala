@@ -65,18 +65,26 @@ object Chip extends App with LazyLogging {
   implicit val materializer: Materializer = ActorMaterializer()
 
   implicit val wd: Path = Paths.get(sys.env.getOrElse("CHIP_FROM", sys.env.getOrElse("HOME", "/tmp")))
+  implicit val cfg = S3Config.local("defaultkey", "defaultkey")
 
-  // input
-  val tilenum = 128 //args(1).toInt
+  val (tilenum, bucket, prefix) =
+    args match {
+      case Array(t, b) ⇒ (t, b, "")
+      case Array(t, b, p) ⇒ (t, b, p)
+      case Array("-cfg") ⇒
+        println(s"working directory set to $wd")
+        println(s"s3 endpoint set to ${cfg.endpoint}")
+        sys.exit(1)
+      case _ ⇒
+        args.foreach(println)
+        println("usage: chip <tile-number> <bucket> [prefix]")
+        sys.exit(1)
+    }
+
   val tif_file = wd.resolve(s"$tilenum.tif").toString
   val json_file = wd.resolve(s"$tilenum.tif.geojson").toString
 
-  // output
-  val bucket = "foo"
-  val prefix = s"1.2/$tilenum"
-  implicit val cfg = S3Config.local("defaultkey", "defaultkey")
-
-  logger.info("chipping tile {}", tilenum)
+  logger.info("chipping tile {} [{}]", tilenum, tif_file)
 
   val source =
     Source
@@ -102,9 +110,13 @@ object Chip extends App with LazyLogging {
           case (p, Some(n), fid, t) ⇒ s"$p/$t/$fid.$n.png"
         }
 
+        println(s"upload $path")
         S3ClientStream().multipartUpload(bucket, path) {
           Source.single(ByteString(chip.t.tile.renderPng.bytes))
         }
       }
       .runWith(Sink.ignore)
+      .onComplete { _ ⇒
+        system.terminate()
+      }(system.dispatcher)
 }
