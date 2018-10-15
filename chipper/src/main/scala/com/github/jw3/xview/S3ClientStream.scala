@@ -8,7 +8,7 @@ import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.services.s3.model._
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client, S3ClientOptions}
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.concurrent.Future
 
 class S3ClientStream(s3Client: AmazonS3) {
@@ -40,7 +40,7 @@ class S3ClientStream(s3Client: AmazonS3) {
       .runWith(Sink.seq)
       .map { etags ⇒
         s3Client.completeMultipartUpload(
-          new CompleteMultipartUploadRequest(bucket, key, initUpload.getUploadId, etags)
+          new CompleteMultipartUploadRequest(bucket, key, initUpload.getUploadId, etags.asJava)
         )
       }
   }
