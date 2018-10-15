@@ -9,8 +9,9 @@ lazy val chipper =
   project
     .in(file("chipper"))
     .settings(commonSettings: _*)
-    .settings(name := "chipper")
-    .enablePlugins(GitVersioning)
+    .settings(name := "chip")
+    .settings(debianSettings: _*)
+    .enablePlugins(JavaServerAppPackaging, DebianPlugin, DockerPlugin, GitVersioning)
 
 lazy val commonSettings = Seq(
   organization := "com.github.jw3",
@@ -52,4 +53,9 @@ lazy val commonSettings = Seq(
 lazy val dockerSettings = Seq(
   dockerBaseImage := sys.env.getOrElse("BASE_IMAGE", "openjdk:8"),
   dockerUpdateLatest := true
+)
+
+lazy val debianSettings = Seq(
+  maintainer in Debian := "jw3",
+  debianPackageDependencies := Seq("java8-runtime-headless")
 )
