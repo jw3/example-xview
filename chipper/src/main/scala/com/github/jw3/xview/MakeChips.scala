@@ -52,18 +52,19 @@ object MakeChips {
 }
 
 object Chip extends App with LazyLogging {
-  import MakeChips.CellSizeOps
-
   implicit val system: ActorSystem = ActorSystem("chipper")
   implicit val materializer: Materializer = ActorMaterializer()
 
   implicit val wd: Path = Paths.get(sys.env.getOrElse("CHIP_FROM", sys.env.getOrElse("HOME", "/tmp")))
   implicit val cfg: S3Config = S3Config.local("defaultkey", "defaultkey")
 
-  val (tilenum, bucket, prefix) =
+  val zooms = false
+  val filter = true
+
+  val (Some(tilenum), Some(bucket), prefix) =
     args match {
-      case Array(t, b) ⇒ (t, b, "")
-      case Array(t, b, p) ⇒ (t, b, p)
+      case Array(t, b) ⇒ (Some(t), Some(b), None)
+      case Array(t, b, p) ⇒ (Some(t), Some(b), Some(p))
       case Array("-cfg") ⇒
         println(s"v${BuildInfo.version}")
         println(s"working directory set to $wd")
@@ -84,23 +85,30 @@ object Chip extends App with LazyLogging {
     .fromIterator(
       () ⇒ GeoJson.fromFile[List[Feature[Polygon, FeatureData]]](json_file.toString).iterator
     )
+    .filter(f ⇒ !filter || (Seq(18, 73) contains f.data.type_id))
     .statefulMapConcat { () ⇒
       {
         val tif: MultibandGeoTiff = GeoTiffReader.readMultiband(tif_file)
         f ⇒
           {
             val cropped = crop(FChip(f, tif))
-            val zoomedIn = cropped.flatMap(zoom(_, "large")(_.zoomIn()))
-            val zoomedOut = cropped.flatMap(zoom(_, "small")(_.zoomOut()))
 
-            cropped ::: zoomedIn ::: zoomedOut ::: Nil
+            if (zooms) {
+              import MakeChips.CellSizeOps
+              val zoomedIn = cropped.flatMap(zoom(_, "large")(_.zoomIn()))
+              val zoomedOut = cropped.flatMap(zoom(_, "small")(_.zoomOut()))
+
+              cropped ::: zoomedIn ::: zoomedOut ::: Nil
+            } else cropped
           }
       }
     }
     .mapAsync(4) { chip ⇒
       val path = (prefix, chip.name, chip.f.data.feature_id, chip.f.data.type_id) match {
-        case (p, None, fid, t) ⇒ s"$p/$t/$fid.png"
-        case (p, Some(n), fid, t) ⇒ s"$p/$t/$fid.$n.png"
+        case (None, None, fid, t) ⇒ s"$t/$fid.png"
+        case (None, None, fid, t) ⇒ s"$t/$fid.png"
+        case (Some(p), None, fid, t) ⇒ s"$p/$t/$fid.png"
+        case (Some(p), Some(n), fid, t) ⇒ s"$p/$t/$fid.$n.png"
       }
 
       println(s"upload $path")
