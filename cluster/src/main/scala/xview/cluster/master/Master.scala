@@ -1,7 +1,7 @@
 package xview.cluster.master
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import xview.cluster.api.{WorkCompleted, Job, RegisterWorker, WorkStarted}
+import xview.cluster.api._
 
 import scala.collection.immutable
 
@@ -10,27 +10,30 @@ object Master {
 }
 
 class Master(job: Job) extends Actor with ActorLogging {
-  var tiles = immutable.Queue(job.tiles: _*)
-  var workers = Map[String, ActorRef]()
+  private var tiles = immutable.Queue(job.tiles: _*)
+  private var workers = Map[String, ActorRef]()
 
   def receive: Receive = {
-    case RegisterWorker ⇒
-      val id = sender.path.name
-      if (!workers.contains(id)) {
-        workers += id → sender
+    case RegisterWorker(id) ⇒
+      workers += id → sender
 
-        if (tiles.nonEmpty) {
-          val tile = tiles.head
-          sender ! WorkStarted(tile)
-          tiles = tiles.tail
+    case RequestTasking(worker) ⇒
+      if (tiles.nonEmpty) {
+        workers.get(worker) match {
+          case Some(ref) ⇒
+            val tile = tiles.head
+            ref ! Task(tile)
+            tiles = tiles.tail
+
+          case None ⇒
+            log.warning("worker {} is not registered", worker)
         }
       }
 
-    case WorkCompleted(_) ⇒
-      if (tiles.nonEmpty) {
-        val tile = tiles.head
-        sender ! WorkStarted(tile)
-        tiles = tiles.tail
-      }
+    case TaskCompleted(worker, tile) ⇒
+      log.info("worker {} finished processing tile {}", worker, tile)
+
+    case TaskFailed(worker, tile) ⇒
+      log.info("worker {} failed to process tile {}", worker, tile)
   }
 }

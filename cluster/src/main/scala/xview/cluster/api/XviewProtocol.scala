@@ -18,12 +18,16 @@ object JobDescriptor extends DefaultJsonProtocol {
 
 case class SubmitJob(job: Job, workers: Int)
 
+// http api
 sealed trait SubmitJobResponse
 case object JobAccepted extends SubmitJobResponse
 case object JobRejected extends SubmitJobResponse
 
-case class WorkStarted(tile: Int)
-case class WorkCompleted(tile: Int)
-case class WorkFailed(tile: Int)
+// master-worker api
+case class Task(tile: Int)
+case class RequestTasking(worker: String)
+case class TaskCompleted(worker: String, tile: Int)
+case class TaskFailed(worker: String, tile: Int)
 
-case object RegisterWorker
+case class RegisterWorker(worker: String)
+case class DeregisterWorker(worker: String)

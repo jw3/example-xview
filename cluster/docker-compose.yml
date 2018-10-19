@@ -69,4 +69,5 @@ worker:
     CLUSTER_HOST: ""
     CLUSTER_PORT: 0
     CLUSTER_ROLE: worker
-    S3_URI: http://172.16.105.83:3000
+    S3_URI: ${S3_URI}
+    AWS_S3_ENDPOINT: ${S3_URI}
