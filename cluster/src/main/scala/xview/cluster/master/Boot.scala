@@ -9,5 +9,6 @@ object Boot extends App with LazyLogging {
   implicit val materializer = ActorMaterializer()
 
   logger.info("master node active")
+
   val master = ControllerSingleton.startSingleton(system)
 }

@@ -36,7 +36,7 @@ frontend:
     CLUSTER_SEEDS: seed-1,seed-2
     CLUSTER_HOST: ""
     CLUSTER_PORT: 0
-    CLUSTER_ROLE: "frontend"
+    CLUSTER_ROLE: frontend
 
 master:
   image: cluster
@@ -51,12 +51,14 @@ master:
     CLUSTER_SEEDS: seed-1,seed-2
     CLUSTER_HOST: ""
     CLUSTER_PORT: 0
-    CLUSTER_ROLE: "master"
+    CLUSTER_ROLE: master
 
 worker:
   image: cluster
   entrypoint: /opt/docker/bin/xview_cluster_worker_boot
   hostname: worker-1
+  volumes:
+    - /usr/local/data:/data:ro
   ports:
     - 2551
   links:
@@ -66,4 +68,5 @@ worker:
     CLUSTER_SEEDS: seed-1,seed-2
     CLUSTER_HOST: ""
     CLUSTER_PORT: 0
-    CLUSTER_ROLE: "worker"
+    CLUSTER_ROLE: worker
+    S3_URI: http://172.16.105.83:3000

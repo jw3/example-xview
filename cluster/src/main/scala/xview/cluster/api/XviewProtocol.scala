@@ -22,7 +22,8 @@ sealed trait SubmitJobResponse
 case object JobAccepted extends SubmitJobResponse
 case object JobRejected extends SubmitJobResponse
 
-case class StartWork(tile: Int)
-case class FinishedWork(tile: Int)
+case class WorkStarted(tile: Int)
+case class WorkCompleted(tile: Int)
+case class WorkFailed(tile: Int)
 
 case object RegisterWorker

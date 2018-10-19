@@ -1,30 +1,46 @@
 package xview.cluster.worker
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Timers}
-import xview.cluster.api.{FinishedWork, RegisterWorker, StartWork}
-import xview.cluster.worker.Worker.TileComplete
+import java.nio.file.{Path, Paths}
 
-import scala.concurrent.duration.DurationInt
-import scala.util.Random
+import akka.actor.Status.Failure
+import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, Props, Timers}
+import akka.stream.ActorMaterializer
+import xview.cluster.api
+import xview.cluster.api.{RegisterWorker, WorkCompleted, WorkFailed, WorkStarted}
 
 object Worker {
   def props(master: ActorRef) = Props(new Worker(master))
 
-  case class TileComplete(id: Int)
+  def wd: Path = Paths.get("/data")
+  def bucket: String = "cluster"
+  def path(tile: Int)(implicit ctx: ActorContext): String = s"tile-$tile-${ctx.self.path.name}"
 }
 
 class Worker(master: ActorRef) extends Actor with Timers with ActorLogging {
+  implicit val mat = ActorMaterializer()
+
   master ! RegisterWorker
 
-  def receive: Receive = {
-    case StartWork(tile) ⇒
+  def ready: Receive = {
+    case WorkStarted(tile) ⇒
       log.info("working on tile {}", tile)
+      ProcessTile.number(tile, Worker.wd, api.S3Path(Worker.bucket, Worker.path(tile)))
 
-      val duration = Random.nextInt(10).seconds
-      timers.startSingleTimer("done", Worker.TileComplete(tile), duration)
-
-    case TileComplete(id) ⇒
-      log.info("completed tile {}", id)
-      master ! FinishedWork(id)
+      context.become(processing(tile))
   }
+
+  def processing(tile: Int): Receive = {
+    case Failure(ex) ⇒
+      log.error(ex, "failure processing tile")
+      master ! WorkFailed(tile)
+
+    case ProcessTile.Complete(id) ⇒
+      log.info("completed tile {}", id)
+      master ! WorkCompleted(id)
+
+    case m ⇒
+      log.warning("unexpected {}", m)
+  }
+
+  def receive: Receive = ready
 }

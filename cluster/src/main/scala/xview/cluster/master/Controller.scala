@@ -12,12 +12,6 @@ import scala.collection.Map
 
 object Controller {
   def props() = Props(new Controller)
-
-//  def backendProxyConfig(base: Config): Config = ConfigFactory.parseString(s"""
-//      akka.remote.netty.tcp.port=2552
-//      akka.remote.netty.tcp.bind-port=2552
-//      akka.cluster.roles=[${Roles.Frontend}]
-//    """).withFallback(base)
 }
 
 //
@@ -43,24 +37,30 @@ class Controller extends Actor with ActorLogging {
 
       var id = 0
       val wpn = workers / backend.size
-      log.info("job will have [{}]:workers per node:[{}]", wpn, backend.size)
+      val xtra = workers % backend.size
+      log.info("job will have [{}]:workers per node:[{}] + [{}]:extra", wpn, backend.size, xtra)
 
-      backend
-        .grouped(wpn)
-        .foreach(_.foreach { workerNode ⇒
-          cluster.system.actorOf(
-            Worker.props(master).withDeploy(Deploy(scope = RemoteScope(workerNode._2.address))),
-            s"worker-$id"
-          )
-          id += 1
-        })
+      if (wpn > 0)
+        backend.values
+          .grouped(wpn)
+          .foreach(_.foreach { node ⇒
+            cluster.system.actorOf(
+              Worker.props(master).withDeploy(Deploy(scope = RemoteScope(node.address))),
+              s"worker-$id"
+            )
+            id += 1
+          })
 
-//      (1 to workers) foreach { id ⇒
-//        cluster.system.actorOf(
-//          Worker.props(master).withDeploy(Deploy(scope = RemoteScope(masterNode._2.address))),
-//          s"worker-$id"
-//        )
-//      }
+      if (xtra > 0)
+        backend.values
+          .take(xtra)
+          .foreach { node ⇒
+            cluster.system.actorOf(
+              Worker.props(master).withDeploy(Deploy(scope = RemoteScope(node.address))),
+              s"worker-$id"
+            )
+            id += 1
+          }
 
     case MemberUp(member) ⇒
       if (member.roles.contains(Roles.Worker)) {

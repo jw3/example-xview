@@ -12,6 +12,7 @@ import scala.concurrent.duration.DurationInt
 object Boot extends App with HttpInterface with LazyLogging {
   implicit val system = Clusters.actorSystemFor(ClusterName)
   implicit val mat = ActorMaterializer()
+
   logger.info("frontend node active")
 
   val controllerProxy = system.actorOf(ControllerSingleton.proxyProps(system), name = "controllerProxy")

@@ -8,5 +8,5 @@ object Boot extends App with LazyLogging {
   implicit val system = Clusters.actorSystemFor(ClusterName)
   implicit val materializer = ActorMaterializer()
 
-  logger.info("cluster node active")
+  logger.info("worker node active")
 }

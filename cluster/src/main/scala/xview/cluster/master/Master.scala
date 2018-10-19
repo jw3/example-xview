@@ -1,7 +1,7 @@
 package xview.cluster.master
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import xview.cluster.api.{FinishedWork, Job, RegisterWorker, StartWork}
+import xview.cluster.api.{WorkCompleted, Job, RegisterWorker, WorkStarted}
 
 import scala.collection.immutable
 
@@ -21,15 +21,15 @@ class Master(job: Job) extends Actor with ActorLogging {
 
         if (tiles.nonEmpty) {
           val tile = tiles.head
-          sender ! StartWork(tile)
+          sender ! WorkStarted(tile)
           tiles = tiles.tail
         }
       }
 
-    case FinishedWork(_) ⇒
+    case WorkCompleted(_) ⇒
       if (tiles.nonEmpty) {
         val tile = tiles.head
-        sender ! StartWork(tile)
+        sender ! WorkStarted(tile)
         tiles = tiles.tail
       }
   }
