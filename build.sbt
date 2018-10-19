@@ -1,7 +1,7 @@
 lazy val `example-xview` =
   project
     .in(file("."))
-    .aggregate(chipper)
+    .aggregate(chipper, cluster)
     .settings(commonSettings: _*)
     .enablePlugins(GitVersioning)
 
@@ -12,6 +12,17 @@ lazy val chipper =
     .settings(name := "chip")
     .settings(buildinfoSettings: _*)
     .settings(debianSettings: _*)
+    .enablePlugins(JavaServerAppPackaging, DebianPlugin, DockerPlugin, GitVersioning, BuildInfoPlugin)
+
+lazy val cluster =
+  project
+    .in(file("cluster"))
+    .dependsOn(chipper)
+    .settings(commonSettings: _*)
+    .settings(name := "cluster")
+    .settings(buildinfoSettings: _*)
+    .settings(debianSettings: _*)
+    .settings(dockerSettings: _*)
     .enablePlugins(JavaServerAppPackaging, DebianPlugin, DockerPlugin, GitVersioning, BuildInfoPlugin)
 
 lazy val commonSettings = Seq(
@@ -36,10 +47,16 @@ lazy val commonSettings = Seq(
     "-Yresolve-term-conflict:object"
   ),
   libraryDependencies ++= {
+    lazy val akkaVersion = "2.5.17"
     lazy val scalatestVersion = "3.0.3"
 
     Seq(
-      "com.typesafe.akka" %% "akka-stream" % "2.5.17",
+      "com.iheart" %% "ficus" % "1.4.0",
+      "com.typesafe.akka" %% "akka-http" % "10.1.5",
+      "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream" % akkaVersion,
+      "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
+      "com.typesafe.akka" %% "akka-cluster-tools" % akkaVersion,
       "com.amazonaws" % "aws-java-sdk-s3" % "1.11.83",
       "com.github.jw3" %% "geotrellis-raster" % "12.2.0.0",
       "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
