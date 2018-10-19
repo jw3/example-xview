@@ -1,8 +1,8 @@
-package xview.cluster.node
+package xview.cluster.worker
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Timers}
 import xview.cluster.api.{FinishedWork, RegisterWorker, StartWork}
-import xview.cluster.node.Worker.TileComplete
+import xview.cluster.worker.Worker.TileComplete
 
 import scala.concurrent.duration.DurationInt
 import scala.util.Random

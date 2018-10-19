@@ -1,4 +1,4 @@
-package xview.cluster.node
+package xview.cluster.master
 
 import akka.stream.ActorMaterializer
 import com.typesafe.scalalogging.LazyLogging
@@ -8,5 +8,6 @@ object Boot extends App with LazyLogging {
   implicit val system = Clusters.actorSystemFor(ClusterName)
   implicit val materializer = ActorMaterializer()
 
-  logger.info("cluster node active")
+  logger.info("master node active")
+  val master = ControllerSingleton.startSingleton(system)
 }

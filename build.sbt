@@ -48,15 +48,17 @@ lazy val commonSettings = Seq(
   ),
   libraryDependencies ++= {
     lazy val akkaVersion = "2.5.17"
+    lazy val akkaHttpVersion = "10.1.5"
     lazy val scalatestVersion = "3.0.3"
 
     Seq(
       "com.iheart" %% "ficus" % "1.4.0",
-      "com.typesafe.akka" %% "akka-http" % "10.1.5",
       "com.typesafe.akka" %% "akka-actor" % akkaVersion,
       "com.typesafe.akka" %% "akka-stream" % akkaVersion,
       "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
       "com.typesafe.akka" %% "akka-cluster-tools" % akkaVersion,
+      "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
+      "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
       "com.amazonaws" % "aws-java-sdk-s3" % "1.11.83",
       "com.github.jw3" %% "geotrellis-raster" % "12.2.0.0",
       "org.scala-lang.modules" %% "scala-xml" % "1.1.0",

@@ -1,17 +1,21 @@
 package xview.cluster.frontend
 
+import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
+import akka.util
 import com.typesafe.scalalogging.LazyLogging
-import xview.cluster.api.{Clusters, Job, _}
-import xview.cluster.node.{Master, Worker}
+import xview.cluster.api.{Clusters, _}
+import xview.cluster.master.ControllerSingleton
 
-object Boot extends App with LazyLogging {
+import scala.concurrent.duration.DurationInt
+
+object Boot extends App with HttpInterface with LazyLogging {
   implicit val system = Clusters.actorSystemFor(ClusterName)
-  implicit val materializer = ActorMaterializer()
+  implicit val mat = ActorMaterializer()
   logger.info("frontend node active")
 
-  val job = Job(100 to 200, List(18, 73))
+  val controllerProxy = system.actorOf(ControllerSingleton.proxyProps(system), name = "controllerProxy")
 
-  val master = system.actorOf(Master.props(job), "master")
-  val workers = (1 to 5).map(id ⇒ system.actorOf(Worker.props(master), s"worker-$id"))
+  implicit val timeout = util.Timeout(10.seconds)
+  Http().bindAndHandle(routes(controllerProxy), "0.0.0.0", 9000)
 }

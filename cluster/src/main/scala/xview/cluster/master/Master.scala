@@ -1,4 +1,4 @@
-package xview.cluster.node
+package xview.cluster.master
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import xview.cluster.api.{FinishedWork, Job, RegisterWorker, StartWork}

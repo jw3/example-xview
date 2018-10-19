@@ -9,7 +9,22 @@ import com.typesafe.scalalogging.LazyLogging
 object Clusters extends LazyLogging {
   val clusterSeedsKey = "cluster.seeds"
 
-  def actorSystemFor(name: String): ActorSystem = ActorSystem(name, ConfigFactory.load(s"$name-cluster.conf"))
+  def actorSystemFor(name: String): ActorSystem = {
+    val config = ConfigFactory.load(s"$name-cluster.conf")
+    val port = 2551
+
+    val system = ActorSystem(name, config)
+    val cluster = Cluster(system)
+    config
+      .getString(clusterSeedsKey)
+      .split(",")
+      .foreach { seed ⇒
+        logger.info(s"initial contact seed: $seed")
+        cluster.join(new Address("akka.tcp", name, seed, port))
+      }
+
+    cluster.system
+  }
 
   def clientFor(name: String)(implicit system: ActorSystem): ActorRef = {
     // placeholder for now, will be pulled out of config
