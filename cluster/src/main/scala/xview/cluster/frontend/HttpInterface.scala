@@ -9,7 +9,7 @@ import akka.pattern.ask
 import akka.stream.Materializer
 import akka.util.Timeout
 import xview.cluster.api
-import xview.cluster.api.{Job, JobAccepted, JobDescriptor, JobRejected}
+import xview.cluster.api._
 
 trait HttpInterface {
   def system: ActorSystem
@@ -21,16 +21,14 @@ trait HttpInterface {
         path("job") {
           post {
             entity(as[JobDescriptor]) { desc ⇒
-              complete(
-                ctrl ? api.SubmitJob(desc.job, desc.workers.getOrElse(Job.DefaultWorkerCount)) map {
-                  case JobAccepted ⇒
-                    StatusCodes.Accepted
-                  case JobRejected ⇒
-                    StatusCodes.NotAcceptable
-                  case _ ⇒
-                    StatusCodes.InternalServerError
-                }
-              )
+              onSuccess(ctrl ? api.SubmitJob(desc)) {
+                case JobAccepted(id) ⇒
+                  complete(StatusCodes.Accepted → id)
+                case JobRejected ⇒
+                  complete(StatusCodes.NotAcceptable)
+                case _ ⇒
+                  complete(StatusCodes.InternalServerError)
+              }
             }
           }
         } ~

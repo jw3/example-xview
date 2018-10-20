@@ -1,7 +1,6 @@
 package xview.cluster.worker
 
 import java.nio.file.{Path, Paths}
-import java.util.UUID
 
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, Props, Timers}
@@ -10,18 +9,19 @@ import xview.cluster.api
 import xview.cluster.api._
 
 object Worker {
-  def props(master: ActorRef) = Props(new Worker(master))
+  def props(id: String, master: ActorRef, jobId: String) = Props(new Worker(id, master, jobId))
 
   def wd: Path = Paths.get("/data")
   def bucket: String = "cluster"
   def path(tile: Int)(implicit ctx: ActorContext): String = s"tile-$tile-${ctx.self.path.name}"
 }
 
-class Worker(master: ActorRef) extends Actor with Timers with ActorLogging {
+class Worker(id: String, master: ActorRef, jobId: String) extends Actor with Timers with ActorLogging {
   private implicit val mat = ActorMaterializer()
-  private val id = UUID.randomUUID.toString
 
+  log.info("registering")
   master ! RegisterWorker(id)
+  // todo;; should get an ack
 
   def ready: Receive = {
     master ! RequestTasking(id)

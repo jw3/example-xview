@@ -1,5 +1,7 @@
 package xview.cluster.master
 
+import java.util.UUID
+
 import akka.actor.{Actor, ActorLogging, Deploy, Props}
 import akka.cluster.ClusterEvent._
 import akka.cluster.{Cluster, Member}
@@ -24,43 +26,37 @@ class Controller extends Actor with ActorLogging {
   var backend: Map[String, Member] = Map.empty
 
   def receive: Receive = {
-    case SubmitJob(_, _) if backend.isEmpty ⇒
+    case SubmitJob(_) if backend.isEmpty ⇒
       sender ! JobRejected
 
-    case SubmitJob(job, workers) ⇒
-      sender ! JobAccepted
+    case SubmitJob(desc) ⇒
+      val job = Job(UUID.randomUUID.toString, desc)
+      sender ! JobAccepted(job.id)
+
+      val shortJobId = job.id.take(8)
+      log.info("job {} accepted ({})", shortJobId, job.id)
+
+      // used later for spinning up instances
+      // val nodes = desc.nodes.getOrElse(JobDescriptor.DefaultWorkersPerNode)
+
+      val wpn = JobDescriptor.DefaultWorkersPerNode
+      log.info("job will have [{}] workers on each of [{}] cluster nodes", wpn, backend.size)
 
       val master = cluster.system.actorOf(
         Master.props(job),
-        "master"
+        s"master-$shortJobId"
       )
 
-      var id = 0
-      val wpn = workers / backend.size
-      val xtra = workers % backend.size
-      log.info("job will have [{}]:workers per node:[{}] + [{}]:extra", wpn, backend.size, xtra)
-
-      if (wpn > 0)
-        backend.values
-          .grouped(wpn)
-          .foreach(_.foreach { node ⇒
-            cluster.system.actorOf(
-              Worker.props(master).withDeploy(Deploy(scope = RemoteScope(node.address))),
-              s"worker-$id"
-            )
-            id += 1
-          })
-
-      if (xtra > 0)
-        backend.values
-          .take(xtra)
-          .foreach { node ⇒
-            cluster.system.actorOf(
-              Worker.props(master).withDeploy(Deploy(scope = RemoteScope(node.address))),
-              s"worker-$id"
-            )
-            id += 1
-          }
+      backend.values.flatMap { node ⇒
+        for {
+          _ ← 1 to wpn
+          workerId = UUID.randomUUID.toString.take(8)
+          ref = cluster.system.actorOf(
+            Worker.props(workerId, master, job.id).withDeploy(Deploy(scope = RemoteScope(node.address))),
+            s"worker-$shortJobId-$workerId"
+          )
+        } yield workerId → ref
+      }
 
     case MemberUp(member) ⇒
       if (member.roles.contains(Roles.Worker)) {

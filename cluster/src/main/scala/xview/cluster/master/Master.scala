@@ -13,8 +13,11 @@ class Master(job: Job) extends Actor with ActorLogging {
   private var tiles = immutable.Queue(job.tiles: _*)
   private var workers = Map[String, ActorRef]()
 
+  // todo;; distribute work evenly across nodes
+
   def receive: Receive = {
     case RegisterWorker(id) ⇒
+      log.info("registered {}", id)
       workers += id → sender
 
     case RequestTasking(worker) ⇒
