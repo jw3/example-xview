@@ -24,12 +24,13 @@ object ProcessTile {
   def jsonFile(t: Int, wd: Path): String = wd.resolve(s"$t.tif.geojson").toString
   implicit val cfg: S3Config = S3Config.local("defaultkey", "defaultkey")
 
-  def number(num: Int, from: Path, to: S3Path)(implicit ctx: ActorContext, mat: Materializer) =
+  def number(num: Int, from: Path, to: S3Path, filter: Seq[Int] = Seq.empty)(implicit ctx: ActorContext,
+                                                                             mat: Materializer) =
     Source
       .fromIterator(
         () ⇒ GeoJson.fromFile[List[Feature[Polygon, FeatureData]]](jsonFile(num, from)).iterator
       )
-//      .filter(f ⇒ !filter || (Seq(18, 73) contains f.data.type_id))
+      .filter(f ⇒ filter.isEmpty || filter.contains(f.data.type_id))
       .statefulMapConcat { () ⇒
         {
           val tif: MultibandGeoTiff = GeoTiffReader.readMultiband(tifFile(num, from))

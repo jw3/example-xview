@@ -23,7 +23,7 @@ case class JobAccepted(id: String) extends SubmitJobResponse
 case object JobRejected extends SubmitJobResponse
 
 // master-worker api
-case class Task(tile: Int)
+case class Task(tile: Int, filter: Option[Seq[Int]] = None)
 case class RequestTasking(worker: String)
 case class TaskCompleted(worker: String, tile: Int)
 case class TaskFailed(worker: String, tile: Int)

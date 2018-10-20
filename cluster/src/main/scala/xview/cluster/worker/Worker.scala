@@ -27,9 +27,9 @@ class Worker(id: String, master: ActorRef, jobId: String) extends Actor with Tim
     master ! RequestTasking(id)
 
     {
-      case Task(tile) ⇒
+      case Task(tile, filter) ⇒
         log.info("working on tile {}", tile)
-        ProcessTile.number(tile, Worker.wd, api.S3Path(Worker.bucket, Worker.path(tile)))
+        ProcessTile.number(tile, Worker.wd, api.S3Path(Worker.bucket, Worker.path(tile)), filter.getOrElse(Seq.empty))
 
         context.become(processing(tile))
     }
