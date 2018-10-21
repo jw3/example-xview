@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: xview-cluster-seed
+
+parameters:
+  - name: NAME
+    displayName: Cluster Name
+    value: chipper
+    required: true
+
+  - name: DOCKER_IMAGE
+    displayName: Docker image
+    value: jwiii/xview-cluster
+    required: true
+
+  - name: DOCKER_TAG
+    displayName: Docker Tag
+    value: latest
+    required: true
+
+objects:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      labels:
+        run: ${NAME}
+      name: ${NAME}-seed
+    spec:
+      ports:
+        - port: 2551
+          protocol: TCP
+          targetPort: 2551
+      selector:
+        run: ${NAME}-seed
+      clusterIP: None
+
+  - apiVersion: apps/v1beta1
+    kind: StatefulSet
+    metadata:
+      labels:
+        run: ${NAME}-seed
+      name: ${NAME}-seed
+    spec:
+      serviceName: ${NAME}-seed
+      replicas: 2
+      selector:
+        matchLabels:
+          run: ${NAME}-seed
+      template:
+        metadata:
+          labels:
+            run: ${NAME}-seed
+        spec:
+          containers:
+            - name: ${NAME}-seed
+              image: ${DOCKER_IMAGE}:${DOCKER_TAG}
+              env:
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: CLUSTER_SEEDS
+                  value: ${NAME}-seed-0.akka-seed,${NAME}-seed-1.akka-seed
+              command: ["/bin/sh", "-c", "CLUSTER_HOST=${POD_NAME}.akka-seed /opt/docker/bin/xview_cluster_seed_boot"]
+              livenessProbe:
+                tcpSocket:
+                  port: 2551
+              ports:
+                - containerPort: 2551
+                  protocol: TCP
+              imagePullPolicy: Always
+      test: false
+      triggers:
+        - type: ConfigChange

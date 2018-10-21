@@ -1,0 +1,77 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: xview-cluster-build
+  annotations:
+    displayName: Scala SBT
+    description: SBT with multi-project support
+    iconClass: icon-scala
+    tags: scala,sbt
+
+parameters:
+  - name: NAME
+    displayName: Cluster Name
+    required: true
+
+  - name: SBT_VERSION
+    displayName: SBT Version
+    description: Version of SBT to use (eg. 1.1.4).
+    value: 1.1.4
+    required: true
+
+  - name: SCALA_VERSION
+    displayName: Scala Version
+    description: Version of Scala to use (eg. 2.12.5).
+    value: 2.12.5
+    required: true
+
+  - name: SOURCE_REPOSITORY_URL
+    displayName: Git Repository URL
+    description: The URL of the repository with your application source code.
+    required: true
+
+  - name: SOURCE_REPOSITORY_REF
+    displayName: Git Reference
+    description: Repository ref name.
+    value: master
+    required: true
+
+objects:
+  - kind: ImageStream
+    apiVersion: v1
+    metadata:
+      name: ${NAME}
+
+  - kind: BuildConfig
+    apiVersion: v1
+    metadata:
+      name: ${NAME}-build
+      annotations:
+        iconClass: icon-scala
+    spec:
+      resources:
+        limits:
+          cpu: 1
+          memory: 2Gi
+      source:
+        type: Git
+        git:
+          uri: ${SOURCE_REPOSITORY_URL}
+          ref: ${SOURCE_REPOSITORY_REF}
+        contextDir: ""
+      strategy:
+        type: Source
+        sourceStrategy:
+          from:
+            kind: DockerImage
+            name: jwiii/sbt-s2i:${SBT_VERSION}-${SCALA_VERSION}
+          env:
+            - name: SBT_SUBPROJECT
+              value: cluster
+      output:
+        to:
+          kind: ImageStreamTag
+          name: ${NAME}:latest
+      triggers:
+        - type: ConfigChange

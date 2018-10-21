@@ -1,5 +1,5 @@
 seed-1:
-  image: cluster
+  image: xview-cluster
   entrypoint: /opt/docker/bin/xview_cluster_seed_boot
   hostname: seed-1
   ports:
@@ -10,7 +10,7 @@ seed-1:
     CLUSTER_ROLE: seed
 
 seed-2:
-  image: cluster
+  image: xview-cluster
   entrypoint: /opt/docker/bin/xview_cluster_seed_boot
   hostname: seed-2
   ports:
@@ -23,7 +23,7 @@ seed-2:
     CLUSTER_ROLE: seed
 
 frontend:
-  image: cluster
+  image: xview-cluster
   entrypoint: /opt/docker/bin/xview_cluster_frontend_boot
   hostname: frontend
   ports:
@@ -39,7 +39,7 @@ frontend:
     CLUSTER_ROLE: frontend
 
 master:
-  image: cluster
+  image: xview-cluster
   entrypoint: /opt/docker/bin/xview_cluster_master_boot
   hostname: master
   ports:
@@ -54,7 +54,7 @@ master:
     CLUSTER_ROLE: master
 
 worker:
-  image: cluster
+  image: xview-cluster
   entrypoint: /opt/docker/bin/xview_cluster_worker_boot
   hostname: master
   volumes:

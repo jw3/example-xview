@@ -72,6 +72,7 @@ lazy val commonSettings = Seq(
 )
 
 lazy val dockerSettings = Seq(
+  packageName in Docker := "xview-cluster",
   dockerBaseImage := sys.env.getOrElse("BASE_IMAGE", "openjdk:8"),
   dockerUpdateLatest := true
 )
