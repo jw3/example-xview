@@ -46,6 +46,7 @@ lazy val commonSettings = Seq(
     // resolve apparent proguard collision
     "-Yresolve-term-conflict:object"
   ),
+  resolvers += Resolver.bintrayRepo("jw3", "maven"),
   libraryDependencies ++= {
     lazy val akkaVersion = "2.5.17"
     lazy val akkaHttpVersion = "10.1.5"
