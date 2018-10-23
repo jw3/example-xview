@@ -7,6 +7,7 @@ import akka.stream.scaladsl.{Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
 import com.github.jw3.xview.MakeChips._
+import com.github.jw3.xview.common.S3Config
 import com.typesafe.scalalogging.LazyLogging
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader
 import geotrellis.raster.io.geotiff.{AutoHigherResolution, GeoTiffOptions, MultibandGeoTiff}

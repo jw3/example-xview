@@ -1,4 +1,4 @@
-package com.github.jw3.xview
+package com.github.jw3.xview.common
 
 import akka.stream._
 import akka.stream.scaladsl.{Sink, Source}

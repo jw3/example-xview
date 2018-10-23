@@ -1,4 +1,4 @@
-package com.github.jw3.xview
+package com.github.jw3.xview.common
 
 object Labels {
   sealed trait Label extends Cat {

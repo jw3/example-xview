@@ -1,5 +1,4 @@
-package xview.cluster.worker
-
+package com.github.jw3.xview.common
 import java.nio.file.Path
 
 import akka.actor.{ActorRef, ActorSystem}
@@ -11,15 +10,9 @@ import akka.stream.scaladsl.Sink
 import akka.util.ByteString
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.regions.AwsRegionProvider
-import com.github.jw3.xview.MakeChips.{crop, FChip, FeatureData}
-import com.github.jw3.xview.S3Config
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader
-import geotrellis.vector.io.json.FeatureFormats._
 import geotrellis.vector.io.json.GeoJson
-import geotrellis.vector.io.json.GeometryFormats._
 import geotrellis.vector.{Feature, Polygon}
-import spray.json.DefaultJsonProtocol._
-import xview.cluster.api.S3Path
 
 import scala.util.{Failure, Success}
 

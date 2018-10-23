@@ -5,6 +5,7 @@ import java.nio.file.{Path, Paths}
 import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, Props, Timers}
 import akka.stream.ActorMaterializer
+import com.github.jw3.xview.common.ProcessTile
 import xview.cluster.api
 import xview.cluster.api._
 

@@ -1,7 +1,6 @@
-package com.github.jw3.xview
+package com.github.jw3.xview.common
 
-import com.amazonaws.regions.RegionUtils
-import com.amazonaws.regions.Region
+import com.amazonaws.regions.{Region, RegionUtils}
 
 sealed trait S3Config {
   def region: Region
