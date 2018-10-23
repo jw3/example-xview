@@ -9,13 +9,8 @@ parameters:
     value: chipper
     required: true
 
-  - name: DOCKER_IMAGE
-    displayName: Docker image
-    value: jwiii/xview-cluster
-    required: true
-
   - name: DOCKER_TAG
-    displayName: Docker Tag
+    displayName: Version
     value: latest
     required: true
 
@@ -23,9 +18,9 @@ objects:
   - apiVersion: extensions/v1beta1
     kind: Deployment
     metadata:
+      name: ${NAME}-master
       labels:
         run: ${NAME}
-      name: ${NAME}-master
     spec:
       replicas: 1
       selector:
@@ -35,19 +30,23 @@ objects:
         metadata:
           labels:
             run: ${NAME}-master
+          annotations:
+            alpha.image.policy.openshift.io/resolve-names: '*'
         spec:
           containers:
             - name: ${NAME}-master
-              image: ${DOCKER_IMAGE}:${DOCKER_TAG}
+              image: ${NAME}:latest
               env:
+                - name: CLUSTER_ROLE
+                  value: master
                 - name: CLUSTER_SEEDS
-                  value: ${NAME}-seed-0.akka-seed,${NAME}-seed-1.akka-seed
+                  value: ${NAME}-seed-0.${NAME}-seed,${NAME}-seed-1.${NAME}-seed
                 - name: CLUSTER_HOST
                   valueFrom:
                     fieldRef:
                       apiVersion: v1
                       fieldPath: status.podIP
-              command: ["/bin/sh", "-c", "/opt/docker/bin/xview_cluster_master_boot"]
+              command: ["/bin/sh", "-c", "/opt/app-root/src/cluster/target/universal/stage/bin/xview_cluster_master_boot"]
               livenessProbe:
                 tcpSocket:
                   port: 2551
@@ -58,11 +57,12 @@ objects:
       test: false
       triggers:
         - type: ConfigChange
-        - imageChangeParams:
+        - type: ImageChange
+          imageChangeParams:
             automatic: true
             containerNames:
-              - ${NAME}
+              - ${NAME}-master
             from:
               kind: ImageStreamTag
               name: ${NAME}:latest
-          type: ImageChange
+

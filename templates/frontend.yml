@@ -9,13 +9,8 @@ parameters:
     value: chipper
     required: true
 
-  - name: DOCKER_IMAGE
-    displayName: Docker image
-    value: jwiii/xview-cluster
-    required: true
-
   - name: DOCKER_TAG
-    displayName: Docker Tag
+    displayName: Version
     value: latest
     required: true
 
@@ -28,9 +23,9 @@ objects:
   - apiVersion: v1
     kind: Service
     metadata:
+      name: ${NAME}-frontend
       labels:
         app: ${NAME}-frontend
-      name: ${NAME}-frontend
     spec:
       ports:
         - name: 9000-tcp
@@ -62,10 +57,9 @@ objects:
   - apiVersion: v1
     kind: DeploymentConfig
     metadata:
-      generation: 1
+      name: ${NAME}-frontend
       labels:
         app: ${NAME}-frontend
-      name: ${NAME}-frontend
     spec:
       replicas: 1
       selector:
@@ -82,22 +76,26 @@ objects:
         type: Rolling
       template:
         metadata:
+          annotations:
+            alpha.image.policy.openshift.io/resolve-names: '*'
           labels:
             app: ${NAME}-frontend
             deploymentconfig: ${NAME}-frontend
         spec:
           containers:
             - name: ${NAME}-frontend
-              image: ${DOCKER_IMAGE}:${DOCKER_TAG}
+              image: ${NAME}:latest
               env:
+                - name: CLUSTER_ROLE
+                  value: frontend
                 - name: CLUSTER_SEEDS
-                  value: ${NAME}-seed-0.akka-seed,${NAME}-seed-1.akka-seed
+                  value: ${NAME}-seed-0.${NAME}-seed,${NAME}-seed-1.${NAME}-seed
                 - name: CLUSTER_HOST
                   valueFrom:
                     fieldRef:
                       apiVersion: v1
                       fieldPath: status.podIP
-              command: ["/bin/sh", "-c", "/opt/docker/bin/xview_cluster_frontend_boot"]
+              command: ["/bin/sh", "-c", "/opt/app-root/src/cluster/target/universal/stage/bin/xview_cluster_frontend_boot"]
               livenessProbe:
                 tcpSocket:
                   port: 2551
@@ -108,11 +106,11 @@ objects:
       test: false
       triggers:
         - type: ConfigChange
-        - imageChangeParams:
+        - type: ImageChange
+          imageChangeParams:
             automatic: true
             containerNames:
-              - ${NAME}
+            - ${NAME}-frontend
             from:
               kind: ImageStreamTag
               name: ${NAME}:latest
-          type: ImageChange

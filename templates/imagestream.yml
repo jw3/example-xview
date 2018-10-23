@@ -1,17 +1,17 @@
----
 apiVersion: v1
 kind: Template
 metadata:
   name: xview-cluster-build
   annotations:
-    displayName: Scala SBT
-    description: SBT with multi-project support
+    displayName: xView Cluster
+    description: XView Cluster Build
     iconClass: icon-scala
     tags: scala,sbt
 
 parameters:
   - name: NAME
     displayName: Cluster Name
+    value: chipper
     required: true
 
   - name: SBT_VERSION
@@ -37,6 +37,10 @@ parameters:
     value: master
     required: true
 
+  - name: SOURCE_SECRET
+    displayName: Source secret
+    required: false
+
 objects:
   - kind: ImageStream
     apiVersion: v1
@@ -59,6 +63,8 @@ objects:
         git:
           uri: ${SOURCE_REPOSITORY_URL}
           ref: ${SOURCE_REPOSITORY_REF}
+        sourceSecret:
+          name: ${SOURCE_SECRET}
         contextDir: ""
       strategy:
         type: Source

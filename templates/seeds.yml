@@ -9,13 +9,8 @@ parameters:
     value: chipper
     required: true
 
-  - name: DOCKER_IMAGE
-    displayName: Docker image
-    value: jwiii/xview-cluster
-    required: true
-
   - name: DOCKER_TAG
-    displayName: Docker Tag
+    displayName: Version
     value: latest
     required: true
 
@@ -38,9 +33,11 @@ objects:
   - apiVersion: apps/v1beta1
     kind: StatefulSet
     metadata:
+      name: ${NAME}-seed
       labels:
         run: ${NAME}-seed
-      name: ${NAME}-seed
+      annotations:
+        alpha.image.policy.openshift.io/resolve-names: '*'
     spec:
       serviceName: ${NAME}-seed
       replicas: 2
@@ -54,15 +51,17 @@ objects:
         spec:
           containers:
             - name: ${NAME}-seed
-              image: ${DOCKER_IMAGE}:${DOCKER_TAG}
+              image: ${NAME}:latest
               env:
+                - name: CLUSTER_ROLE
+                  value: seed
                 - name: POD_NAME
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.name
                 - name: CLUSTER_SEEDS
-                  value: ${NAME}-seed-0.akka-seed,${NAME}-seed-1.akka-seed
-              command: ["/bin/sh", "-c", "CLUSTER_HOST=${POD_NAME}.akka-seed /opt/docker/bin/xview_cluster_seed_boot"]
+                  value: ${NAME}-seed-0.${NAME}-seed
+              command: ["/bin/sh", "-c", "CLUSTER_HOST=${POD_NAME}.${NAME}-seed /opt/app-root/src/cluster/target/universal/stage/bin/xview_cluster_seed_boot"]
               livenessProbe:
                 tcpSocket:
                   port: 2551
@@ -73,3 +72,11 @@ objects:
       test: false
       triggers:
         - type: ConfigChange
+        - type: ImageChange
+          imageChangeParams:
+            automatic: true
+            containerNames:
+              - ${NAME}-seed
+            from:
+              kind: ImageStreamTag
+              name: ${NAME}:latest
