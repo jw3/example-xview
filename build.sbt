@@ -1,29 +1,36 @@
 lazy val `example-xview` =
   project
     .in(file("."))
-    .aggregate(chipper, cluster)
+    .aggregate(common, chipper, cluster)
     .settings(commonSettings: _*)
     .enablePlugins(GitVersioning)
+
+lazy val common =
+  project
+    .in(file("common"))
+    .settings(commonSettings: _*)
+    .settings(name := "common")
+    .settings(buildinfoSettings: _*)
+    .enablePlugins(GitVersioning, BuildInfoPlugin)
 
 lazy val chipper =
   project
     .in(file("chipper"))
+    .dependsOn(common)
     .settings(commonSettings: _*)
     .settings(name := "chip")
-    .settings(buildinfoSettings: _*)
     .settings(debianSettings: _*)
-    .enablePlugins(JavaServerAppPackaging, DebianPlugin, DockerPlugin, GitVersioning, BuildInfoPlugin)
+    .enablePlugins(JavaServerAppPackaging, DebianPlugin, DockerPlugin, GitVersioning)
 
 lazy val cluster =
   project
     .in(file("cluster"))
-    .dependsOn(chipper)
+    .dependsOn(common)
     .settings(commonSettings: _*)
     .settings(name := "cluster")
-    .settings(buildinfoSettings: _*)
     .settings(debianSettings: _*)
     .settings(dockerSettings: _*)
-    .enablePlugins(JavaServerAppPackaging, DebianPlugin, DockerPlugin, GitVersioning, BuildInfoPlugin)
+    .enablePlugins(JavaServerAppPackaging, DebianPlugin, DockerPlugin, GitVersioning)
 
 lazy val commonSettings = Seq(
   organization := "com.github.jw3",
