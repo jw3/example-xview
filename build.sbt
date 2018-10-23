@@ -61,6 +61,7 @@ lazy val commonSettings = Seq(
       "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
       "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
       "com.amazonaws" % "aws-java-sdk-s3" % "1.11.83",
+      "com.lightbend.akka" %% "akka-stream-alpakka-s3" % "1.0-M1",
       "com.github.jw3" %% "geotrellis-raster" % "12.2.0.0",
       "org.scala-lang.modules" %% "scala-xml" % "1.1.0",
       "ch.qos.logback" % "logback-classic" % "1.2.3",

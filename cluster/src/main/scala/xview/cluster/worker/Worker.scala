@@ -18,6 +18,7 @@ object Worker {
 
 class Worker(id: String, master: ActorRef, jobId: String) extends Actor with Timers with ActorLogging {
   private implicit val mat = ActorMaterializer()
+  import context.system
 
   log.info("registering")
   master ! RegisterWorker(id)
@@ -29,7 +30,11 @@ class Worker(id: String, master: ActorRef, jobId: String) extends Actor with Tim
     {
       case Task(tile, filter) ⇒
         log.info("working on tile {}", tile)
-        ProcessTile.number(tile, Worker.wd, api.S3Path(Worker.bucket, Worker.path(tile)), filter.getOrElse(Seq.empty))
+        ProcessTile.number(tile,
+                           Worker.wd,
+                           api.S3Path(Worker.bucket, Worker.path(tile)),
+                           filter.getOrElse(Seq.empty),
+                           self)
 
         context.become(processing(tile))
     }
