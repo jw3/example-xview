@@ -2,9 +2,11 @@ package com.github.jw3.xview
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
-import com.github.jw3.xview.common.{ProcessTile, S3Config}
+import com.github.jw3.xview.common.{ProcessTile, S3Config, S3Path}
 import com.typesafe.scalalogging.LazyLogging
 
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}
 
 object ChipS3 extends App with LazyLogging {
@@ -33,9 +35,7 @@ object ChipS3 extends App with LazyLogging {
   logger.info(s"chipping tile [$tilenum] from ")
 
   import system.dispatcher
-  val res = ProcessTile.number(tilenum,
-                               common.S3Path(bucket, prefix),
-                               common.S3Path(bucket, prefix.map(p ⇒ s"$p-chips").getOrElse("chips")))
+  val res = ProcessTile.number(tilenum, S3Path(bucket, prefix), S3Path(bucket, "chips"))
 
   res.onComplete {
     case Success(_) ⇒
@@ -44,4 +44,6 @@ object ChipS3 extends App with LazyLogging {
       logger.error(s"$tilenum failed", ex)
   }
   res.onComplete(_ ⇒ system.terminate())
+
+  Await.ready(res, Duration.Inf)
 }

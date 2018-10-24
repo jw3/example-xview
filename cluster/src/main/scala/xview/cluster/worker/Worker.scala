@@ -6,7 +6,6 @@ import akka.actor.Status.Failure
 import akka.actor.{Actor, ActorContext, ActorLogging, ActorRef, Props, Timers}
 import akka.stream.ActorMaterializer
 import com.github.jw3.xview.common.{ProcessTile, S3Path}
-import xview.cluster.api
 import xview.cluster.api._
 
 object Worker {
@@ -32,7 +31,7 @@ class Worker(id: String, master: ActorRef, jobId: String) extends Actor with Tim
       case Task(tile, filter) ⇒
         log.info("working on tile {}", tile)
         ProcessTile.number(tile,
-                           Worker.wd,
+                           S3Path(Worker.bucket, ""), //todo;; sort out the source prefix
                            S3Path(Worker.bucket, Worker.path(tile)),
                            filter.getOrElse(Seq.empty),
                            self)
