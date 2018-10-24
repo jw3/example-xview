@@ -70,10 +70,11 @@ object ProcessTile {
           e.printStackTrace()
           println("failure")
       }
+
       f
     }
 
-    val tmp = Files.createTempFile(s"xview-$num", s"tif")
+    val tmp = Files.createTempFile(s"xview-$num", s".tif")
     dl_tif(tmp).map(_ ⇒ GeoTiffReader.readMultiband(tmp.toString)).flatMap(chips)
   }
 }

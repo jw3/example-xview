@@ -1,5 +1,5 @@
 #!/bin/bash
 
 curl -H 'content-type: application/json' \
-     -d '{"job":{"tiles":[100,101,102,103,104,105,106,107,108,109]},"workers":10}' \
+     -d '{ tiles": [100,128] }' \
      localhost:9000/api/job
