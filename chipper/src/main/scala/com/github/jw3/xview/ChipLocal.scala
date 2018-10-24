@@ -17,9 +17,7 @@ import geotrellis.vector.io.json.GeometryFormats._
 import geotrellis.vector.{Feature, Polygon}
 import spray.json.DefaultJsonProtocol._
 
-object CLI {}
-
-object Chip extends App with LazyLogging {
+object ChipLocal extends App with LazyLogging {
   implicit val system: ActorSystem = ActorSystem("chipper")
   implicit val materializer: Materializer = ActorMaterializer()
 
