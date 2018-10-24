@@ -19,6 +19,18 @@ parameters:
     value: '3'
     required: true
 
+  - name: S3_URI
+    displayName: URI of S3 server
+    required: true
+
+  - name: S3_SOURCE_PATH
+    displayName: S3 Source Path
+    description: Bucket [/Prefix]
+
+  - name: S3_TARGET_PATH
+    displayName: S3 Target Bucket
+    description: Bucket [/Prefix]
+
 objects:
   - apiVersion: extensions/v1beta1
     kind: Deployment
@@ -42,6 +54,10 @@ objects:
             - name: ${NAME}-worker
               image: ${NAME}:latest
               env:
+                - name: S3_SOURCE_PATH
+                  value: ${S3_SOURCE_PATH}
+                - name: S3_TARGET_PATH
+                  value: ${S3_TARGET_PATH}
                 - name: CLUSTER_ROLE
                   value: worker
                 - name: CLUSTER_SEEDS

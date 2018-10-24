@@ -2,7 +2,7 @@ package com.github.jw3.xview
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
-import com.github.jw3.xview.common.{ProcessTile, S3Path}
+import com.github.jw3.xview.common.{Args, ProcessTile, S3Path}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.Await
@@ -19,17 +19,8 @@ object ChipS3 extends App with LazyLogging {
   val (Some(tilenum: Int), Some(sourceBucket), sourcePrefix, Some(destBucket), destPrefix) =
     args match {
       case Array(t, s, d) ⇒
-        val (sb, sp) = {
-          val ss = s.split("/", 2)
-          if (ss.size > 1) (ss.headOption, ss.lastOption)
-          else (ss.headOption, None)
-        }
-        val (db, dp) = {
-          val ds = d.split("/", 2)
-          if (ds.size > 1) (ds.headOption, ds.lastOption)
-          else (ds.headOption, None)
-        }
-        (Some(t.toInt), sb, sp, db, dp)
+        val s3p = Args.s3Paths(t.toInt, s, d)
+        (Some(s3p.tile), Some(s3p.source.bucket), s3p.source.path, Some(s3p.target.bucket), s3p.target.path)
 
       case Array("-cfg") ⇒
         println(s"v${BuildInfo.version}")
