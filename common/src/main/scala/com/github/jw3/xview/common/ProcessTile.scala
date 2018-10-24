@@ -4,13 +4,10 @@ import java.nio.file.{Files, Path}
 import akka.Done
 import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.Materializer
-import akka.stream.alpakka.s3.impl.ListBucketVersion2
+import akka.stream.alpakka.s3.S3Settings
 import akka.stream.alpakka.s3.scaladsl.S3Client
-import akka.stream.alpakka.s3.{MemoryBufferType, S3Settings}
 import akka.stream.scaladsl.{FileIO, JsonFraming, Sink, Source}
 import akka.util.ByteString
-import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
-import com.amazonaws.regions.AwsRegionProvider
 import com.github.jw3.xview.common.MakeChips.{FChip, FeatureData, _}
 import geotrellis.raster.io.geotiff.MultibandGeoTiff
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader
@@ -39,15 +36,9 @@ object ProcessTile {
       implicit system: ActorSystem,
       mat: Materializer): Future[Done] = {
 
-    val region = new AwsRegionProvider { def getRegion: String = "us-east-1" }
-    val credentials = new AWSStaticCredentialsProvider(new BasicAWSCredentials("defaultkey", "defaultkey"))
-    val endpointOverride = Some(sys.env.getOrElse("S3_URI", "http://localhost:9000"))
+    import system.dispatcher
 
-    val settings =
-      new S3Settings(MemoryBufferType, None, credentials, region, true, endpointOverride, ListBucketVersion2)
-    val s3Client = new S3Client(settings)
-
-    import mat.executionContext
+    val s3Client = new S3Client(S3Settings.create(system))
 
     def dl_tif(path: Path) =
       s3Client

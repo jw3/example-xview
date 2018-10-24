@@ -2,7 +2,7 @@ package com.github.jw3.xview
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
-import com.github.jw3.xview.common.{ProcessTile, S3Config, S3Path}
+import com.github.jw3.xview.common.{ProcessTile, S3Path}
 import com.typesafe.scalalogging.LazyLogging
 
 import scala.concurrent.Await
@@ -13,29 +13,38 @@ object ChipS3 extends App with LazyLogging {
   implicit val system: ActorSystem = ActorSystem("chipper")
   implicit val materializer: Materializer = ActorMaterializer()
 
-  implicit val cfg: S3Config = S3Config.local("defaultkey", "defaultkey")
-
   val zooms = false
   val filter = true
 
-  val (Some(tilenum: Int), Some(bucket), prefix) =
+  val (Some(tilenum: Int), Some(sourceBucket), sourcePrefix, Some(destBucket), destPrefix) =
     args match {
-      case Array(t, b) ⇒ (Some(t.toInt), Some(b), None)
-      case Array(t, b, p) ⇒ (Some(t.toInt), Some(b), Some(p))
+      case Array(t, s, d) ⇒
+        val (sb, sp) = {
+          val ss = s.split("/", 2)
+          if (ss.size > 1) (ss.headOption, ss.lastOption)
+          else (ss.headOption, None)
+        }
+        val (db, dp) = {
+          val ds = d.split("/", 2)
+          if (ds.size > 1) (ds.headOption, ds.lastOption)
+          else (ds.headOption, None)
+        }
+        (Some(t.toInt), sb, sp, db, dp)
+
       case Array("-cfg") ⇒
         println(s"v${BuildInfo.version}")
-        println(s"s3 endpoint set to ${cfg.endpoint}")
+        sys.env.get("AWS_S3_ENDPOINT").foreach(ep ⇒ println(s"s3 endpoint set to $ep"))
         sys.exit(1)
       case _ ⇒
         args.foreach(println)
-        println("usage: chip <tile-number> <bucket> [prefix]")
+        println("usage: chip <tile-number> <src-bucket>[/prefix] <dst-bucket>[/prefix]")
         sys.exit(1)
     }
 
-  logger.info(s"chipping tile [$tilenum] from ")
+  logger.info(s"chipping tile [$tilenum] from $sourceBucket [$sourcePrefix] to $destBucket [$destPrefix]")
 
   import system.dispatcher
-  val res = ProcessTile.number(tilenum, S3Path(bucket, prefix), S3Path(bucket, "chips"))
+  val res = ProcessTile.number(tilenum, S3Path(sourceBucket, sourcePrefix), S3Path(destBucket, destPrefix))
 
   res.onComplete {
     case Success(_) ⇒
