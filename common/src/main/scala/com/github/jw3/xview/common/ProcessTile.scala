@@ -10,11 +10,31 @@ import akka.stream.scaladsl.Sink
 import akka.util.ByteString
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.regions.AwsRegionProvider
+import com.github.jw3.xview.common.MakeChips.{FChip, FeatureData}
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader
 import geotrellis.vector.io.json.GeoJson
 import geotrellis.vector.{Feature, Polygon}
-
+import MakeChips._
 import scala.util.{Failure, Success}
+
+import java.nio.file.{Path, Paths}
+
+import akka.actor.ActorSystem
+import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.{ActorMaterializer, Materializer}
+import akka.util.ByteString
+import com.github.jw3.xview.common.S3Config
+import com.typesafe.scalalogging.LazyLogging
+import geotrellis.raster.io.geotiff.reader.GeoTiffReader
+import geotrellis.raster.io.geotiff.{AutoHigherResolution, GeoTiffOptions, MultibandGeoTiff}
+import geotrellis.raster.resample.NearestNeighbor
+import geotrellis.raster.{CellSize, RasterExtent}
+import geotrellis.vector.io.json.FeatureFormats._
+import geotrellis.vector.io.json.GeoJson
+import geotrellis.vector.io.json.GeometryFormats._
+import geotrellis.vector.{Feature, Polygon}
+import spray.json.DefaultJsonProtocol._
+import spray.json.RootJsonFormat
 
 object ProcessTile {
   case class Complete(id: Int)

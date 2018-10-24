@@ -6,51 +6,18 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Sink, Source}
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
-import com.github.jw3.xview.MakeChips._
-import com.github.jw3.xview.common.S3Config
+import com.github.jw3.xview.common.MakeChips.{FChip, FeatureData, _}
+import com.github.jw3.xview.common.{S3ClientStream, S3Config}
 import com.typesafe.scalalogging.LazyLogging
+import geotrellis.raster.io.geotiff.MultibandGeoTiff
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader
-import geotrellis.raster.io.geotiff.{AutoHigherResolution, GeoTiffOptions, MultibandGeoTiff}
-import geotrellis.raster.resample.NearestNeighbor
-import geotrellis.raster.{CellSize, RasterExtent}
 import geotrellis.vector.io.json.FeatureFormats._
 import geotrellis.vector.io.json.GeoJson
 import geotrellis.vector.io.json.GeometryFormats._
 import geotrellis.vector.{Feature, Polygon}
 import spray.json.DefaultJsonProtocol._
-import spray.json.RootJsonFormat
 
-object MakeChips {
-  type PolygonFeature = Feature[Polygon, FeatureData]
-  case class FChip(f: PolygonFeature, t: MultibandGeoTiff, name: Option[String] = None)
-
-  case class FeatureData(feature_id: Int, type_id: Int, image_id: String)
-  object FeatureData {
-    implicit val format: RootJsonFormat[FeatureData] = jsonFormat3(FeatureData.apply)
-  }
-
-  def crop(in: FChip): List[FChip] = {
-    val chipOpts = GeoTiffOptions.DEFAULT.copy(colorSpace = in.t.options.colorSpace)
-    List(
-      FChip(in.f,
-            MultibandGeoTiff(in.t.tile.crop(in.t.extent, in.f.geom.envelope), in.f.geom.envelope, in.t.crs, chipOpts))
-    )
-  }
-
-  def zoom(in: FChip, name: String)(z: CellSize ⇒ CellSize): List[FChip] = {
-    val zoomed = in.t.resample(
-      RasterExtent(in.t.extent, z(in.t.cellSize)),
-      NearestNeighbor,
-      AutoHigherResolution
-    )
-    List(FChip(in.f, MultibandGeoTiff(zoomed, in.f.geom.envelope, in.t.crs, in.t.options), Some(name)))
-  }
-
-  implicit class CellSizeOps(cs: CellSize) {
-    def zoomIn(f: Int = 2): CellSize = CellSize(cs.width / f, cs.height / f)
-    def zoomOut(f: Int = 2): CellSize = CellSize(cs.width * f, cs.height * f)
-  }
-}
+object CLI {}
 
 object Chip extends App with LazyLogging {
   implicit val system: ActorSystem = ActorSystem("chipper")
@@ -95,7 +62,6 @@ object Chip extends App with LazyLogging {
             val cropped = crop(FChip(f, tif))
 
             if (zooms) {
-              import MakeChips.CellSizeOps
               val zoomedIn = cropped.flatMap(zoom(_, "large")(_.zoomIn()))
               val zoomedOut = cropped.flatMap(zoom(_, "small")(_.zoomOut()))
 
@@ -107,8 +73,8 @@ object Chip extends App with LazyLogging {
     .mapAsync(4) { chip ⇒
       val path = (prefix, chip.name, chip.f.data.feature_id, chip.f.data.type_id) match {
         case (None, None, fid, t) ⇒ s"$t/$fid.png"
-        case (None, None, fid, t) ⇒ s"$t/$fid.png"
         case (Some(p), None, fid, t) ⇒ s"$p/$t/$fid.png"
+        case (None, Some(n), fid, t) ⇒ s"$t/$fid.$n.png"
         case (Some(p), Some(n), fid, t) ⇒ s"$p/$t/$fid.$n.png"
       }
 

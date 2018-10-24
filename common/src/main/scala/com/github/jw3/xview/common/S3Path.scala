@@ -1,4 +1,4 @@
-package xview.cluster.api
+package com.github.jw3.xview.common
 
 case class S3Path(bucket: String, path: Option[String])
 object S3Path {
