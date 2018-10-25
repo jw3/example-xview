@@ -55,13 +55,7 @@ objects:
     apiVersion: v1
     metadata:
       name: ${NAME}-build
-      annotations:
-        iconClass: icon-scala
     spec:
-      resources:
-        limits:
-          cpu: 1
-          memory: 2Gi
       source:
         type: Git
         git:

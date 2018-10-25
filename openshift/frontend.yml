@@ -28,8 +28,6 @@ objects:
     kind: Service
     metadata:
       name: ${NAME}-frontend
-      labels:
-        app: ${NAME}-frontend
     spec:
       ports:
         - name: 9000-tcp
@@ -37,7 +35,6 @@ objects:
           protocol: TCP
           targetPort: 9000
       selector:
-        app: ${NAME}-frontend
         deploymentconfig: ${NAME}-frontend
       sessionAffinity: None
       type: ClusterIP
@@ -62,12 +59,9 @@ objects:
     kind: DeploymentConfig
     metadata:
       name: ${NAME}-frontend
-      labels:
-        app: ${NAME}-frontend
     spec:
       replicas: 1
       selector:
-        app: ${NAME}-frontend
         deploymentconfig: ${NAME}-frontend
       strategy:
         resources: {}
@@ -83,7 +77,7 @@ objects:
           annotations:
             alpha.image.policy.openshift.io/resolve-names: '*'
           labels:
-            app: ${NAME}-frontend
+            run: ${NAME}-frontend
             deploymentconfig: ${NAME}-frontend
         spec:
           containers:

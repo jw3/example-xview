@@ -19,23 +19,30 @@ parameters:
     required: true
 
 objects:
-  - apiVersion: extensions/v1beta1
-    kind: Deployment
+  - apiVersion: v1
+    kind: DeploymentConfig
     metadata:
       name: ${NAME}-master
-      labels:
-        run: ${NAME}
     spec:
       replicas: 1
       selector:
-        matchLabels:
-          run: ${NAME}-master
+        deploymentconfig: ${NAME}-master
+      strategy:
+        resources: {}
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 25%
+          timeoutSeconds: 600
+          updatePeriodSeconds: 1
+        type: Rolling
       template:
         metadata:
-          labels:
-            run: ${NAME}-master
           annotations:
             alpha.image.policy.openshift.io/resolve-names: '*'
+          labels:
+            run: ${NAME}-master
+            deploymentconfig: ${NAME}-master
         spec:
           containers:
             - name: ${NAME}-master

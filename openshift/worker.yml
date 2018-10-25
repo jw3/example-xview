@@ -38,23 +38,30 @@ parameters:
     description: Bucket [/Prefix]
 
 objects:
-  - apiVersion: extensions/v1beta1
-    kind: Deployment
+  - apiVersion: v1
+    kind: DeploymentConfig
     metadata:
       name: ${NAME}-worker
-      labels:
-        run: ${NAME}
     spec:
       replicas: ${{REPLICAS}}
       selector:
-        matchLabels:
-          run: ${NAME}-worker
+        deploymentconfig: ${NAME}-worker
+      strategy:
+        resources: {}
+        rollingParams:
+          intervalSeconds: 1
+          maxSurge: 25%
+          maxUnavailable: 25%
+          timeoutSeconds: 600
+          updatePeriodSeconds: 1
+        type: Rolling
       template:
         metadata:
-          labels:
-            run: ${NAME}-worker
           annotations:
             alpha.image.policy.openshift.io/resolve-names: '*'
+          labels:
+            run: ${NAME}-worker
+            deploymentconfig: ${NAME}-worker
         spec:
           containers:
             - name: ${NAME}-worker
