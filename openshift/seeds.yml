@@ -1,7 +1,11 @@
-apiVersion: v1
 kind: Template
+apiVersion: v1
 metadata:
   name: xview-cluster-seed
+labels:
+  app: ${NAME}
+  template: xview-cluster
+  xview/cluster.role: seed
 
 parameters:
   - name: NAME
@@ -30,7 +34,7 @@ objects:
         run: ${NAME}-seed
       clusterIP: None
 
-  - apiVersion: apps/v1beta1
+  - apiVersion: apps/v1
     kind: StatefulSet
     metadata:
       name: ${NAME}-seed

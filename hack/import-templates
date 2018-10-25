@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-readonly templates_dir="${TEMPLATE_DIR:-templates}"
-
-for t in $(ls ${templates_dir}); do
-  echo "import $t"
-  oc create -f ${templates_dir}/${t}
-done

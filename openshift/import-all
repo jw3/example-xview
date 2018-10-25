@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+for t in $(ls *.yml); do
+  echo "import $t"
+  oc create -f ${t}
+done

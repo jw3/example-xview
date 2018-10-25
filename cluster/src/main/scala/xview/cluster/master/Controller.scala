@@ -24,8 +24,8 @@ object Controller {
 //
 class Controller extends Actor with ActorLogging {
   val cluster: Cluster = Cluster(context.system)
-  var masters: Map[String, ActorRef] = Map.empty
   var backend: Map[String, Member] = Map.empty
+  var masters: Map[String, ActorRef] = Map.empty
   val wpn = JobDescriptor.DefaultWorkersPerNode
 
   // todo;; hack for now till figure out appropriate states
@@ -65,10 +65,12 @@ class Controller extends Actor with ActorLogging {
       }
 
     case UnreachableMember(member) ⇒
-      log.info("=====> node unreachable: {}", member)
+      log.info("backend node unreachable, removing {}", member)
+      backend = backend.filterNot(e ⇒ e._2 == member)
 
-    case MemberRemoved(member, previousStatus) ⇒
-      log.info("=====> node removed: {} after {}", member.address, previousStatus)
+    case MemberRemoved(member, _) ⇒
+      log.info("backend node removed, {}", member)
+      backend = backend.filterNot(e ⇒ e._2 == member)
 
     case _: MemberEvent ⇒
   }

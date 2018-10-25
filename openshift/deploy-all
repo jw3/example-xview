@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+set xe
+
+# params
+
+IFS= read -p "Project Name: " NAME
+IFS= read -p "Git Repository (https): " SOURCE_REPOSITORY_URL
+IFS= read -p "Source Secret for Git (path to yml): " SOURCE_SECRET
+IFS= read -p "Domain name for API route: " REST_API_DOMAIN
+IFS= read -p "Initial worker replicas: " REPLICAS # workers
+IFS= read -p "S3 URI: " S3_URI
+IFS= read -p "S3 source path (bucket[/path]): " S3_SOURCE_PATH
+IFS= read -p "S3 target path (bucket[/path]): " S3_TARGET_PATH
+
+declare secret_name
+
+# create project
+oc new-project "$NAME"
+
+# secret
+if [[ -f ${SOURCE_SECRET} ]]; then
+  declare ss=$(oc create -f ${SOURCE_SECRET})
+  secret_name=$(sed -r 's#^.+"(.+)".+$#\1#g' <<< "$ss")
+  if [[ -z "$secret_name" ]]; then echo "$ss"; exit ${ssec}; fi
+fi
+echo "created $secret_name"
+
+# imagestream
+oc process -f imagestream.yml \
+           -p NAME="$NAME" \
+           -p SOURCE_REPOSITORY_URL="$SOURCE_REPOSITORY_URL" \
+           -p SOURCE_SECRET="$secret_name" \
+           | oc create -f -
+
+# seeds
+oc process -f seeds.yml -p NAME="$NAME" | oc create -f -
+
+# frontend
+oc process -f frontend.yml \
+           -p NAME="$NAME" \
+           -p REST_API_DOMAIN="$REST_API_DOMAIN" \
+           | oc create -f -
+
+# master
+oc process -f master.yml -p NAME="$NAME" | oc create -f -
+
+# worker
+oc process -f worker.yml \
+           -p NAME="$NAME" \
+           -p REPLICAS="$REPLICAS" \
+           -p S3_URI="$S3_URI" \
+           -p S3_SOURCE_PATH="$S3_SOURCE_PATH" \
+           -p S3_TARGET_PATH="$S3_TARGET_PATH" \
+           | oc create -f -
