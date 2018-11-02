@@ -2,8 +2,11 @@
 
 set xe
 
-# params
+# validate connection
+oc projects &> /dev/null
+if [[ $? -ne 0 ]]; then echo "oc must be logged in"; exit 1; fi
 
+# params
 IFS= read -p "Project Name: " NAME
 IFS= read -p "Git Repository (https): " SOURCE_REPOSITORY_URL
 IFS= read -p "Source Secret for Git (path to yml): " SOURCE_SECRET
