@@ -26,6 +26,10 @@ object ProcessTile {
     case Some(p) ⇒ s"$p/$t.$fid.tif"
     case None ⇒ s"$t.$fid.tif"
   }
+  def chippedFileWithType(t: Int, fid: Int, ftype: Int, path: Option[String]): String = path match {
+    case Some(p) ⇒ chippedFile(t, fid, Some(s"$p/$ftype"))
+    case None ⇒ chippedFile(t, fid, Some(s"$ftype"))
+  }
   def tifFile(t: Int, path: Option[String]): String = path match {
     case Some(p) ⇒ s"$p/$t.tif"
     case None ⇒ s"$t.tif"
@@ -60,7 +64,8 @@ object ProcessTile {
         .mapAsync(1)(t ⇒
           Source
             .single(t._2)
-            .runWith(s3Client.multipartUpload(to.bucket, chippedFile(num, t._1.data.feature_id, to.path))))
+            .runWith(s3Client
+              .multipartUpload(to.bucket, chippedFileWithType(num, t._1.data.feature_id, t._1.data.type_id, to.path))))
         .runWith(Sink.ignore)
       f.onComplete {
         case Success(_) if ref != ActorRef.noSender ⇒ ref ! Complete(num)
