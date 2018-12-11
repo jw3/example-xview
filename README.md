@@ -28,6 +28,9 @@ hacking on the xview dataset
 - red blood cell detection
   - https://gist.github.com/saudet/fb8a4d9544dc3c411b302ccd6bbf87e7
   - https://github.com/cosmicad/dataset
+- SIMRDWN
+  - https://github.com/CosmiQ/simrdwn
+  - https://medium.com/the-downlinq/simrdwn-adapting-multiple-object-detection-frameworks-for-satellite-imagery-applications-991dbf3d022b
 - YOLT
   - https://github.com/CosmiQ/yolt
   - https://medium.com/the-downlinq/you-only-look-twice-multi-scale-object-detection-in-satellite-imagery-with-convolutional-neural-38dad1cf7571
@@ -35,7 +38,6 @@ hacking on the xview dataset
 - http://fxapps.blogspot.com/2018/01/detecting-objects-using-javafx-and-deep.html
 - https://github.com/ultralytics
 - https://playground.tensorflow.org
-- https://developer.nvidia.com/digits
 - https://blog.skymind.ai/building-a-production-grade-object-detection-system-with-skil-and-yolo/
 - https://skymind.ai/wiki/convolutional-network
 
@@ -48,68 +50,7 @@ hacking on the xview dataset
 
 ### xview class labels
 
-|id|name|
-|---|---|
-|11|Fixed-wing Aircraft|
-|12|Small Aircraft|
-|13|Cargo Plane|
-|15|Helicopter|
-|17|Passenger Vehicle|
-|18|Small Car|
-|19|Bus|
-|20|Pickup Truck|
-|21|Utility Truck|
-|23|Truck|
-|24|Cargo Truck|
-|25|Truck w/Box|
-|26|Truck Tractor|
-|27|Trailer|
-|28|Truck w/Flatbed|
-|29|Truck w/Liquid|
-|32|Crane Truck|
-|33|Railway Vehicle|
-|34|Passenger Car|
-|35|Cargo Car|
-|36|Flat Car|
-|37|Tank car|
-|38|Locomotive|
-|40|Maritime Vessel|
-|41|Motorboat|
-|42|Sailboat|
-|44|Tugboat|
-|45|Barge|
-|47|Fishing Vessel|
-|49|Ferry|
-|50|Yacht|
-|51|Container Ship|
-|52|Oil Tanker|
-|53|Engineering Vehicle|
-|54|Tower crane|
-|55|Container Crane|
-|56|Reach Stacker|
-|57|Straddle Carrier|
-|59|Mobile Crane|
-|60|Dump Truck|
-|61|Haul Truck|
-|62|Scraper/Tractor|
-|63|Front loader/Bulldozer|
-|64|Excavator|
-|65|Cement Mixer|
-|66|Ground Grader|
-|71|Hut/Tent|
-|72|Shed|
-|73|Building|
-|74|Aircraft Hangar|
-|76|Damaged Building|
-|77|Facility|
-|79|Construction Site|
-|83|Vehicle Lot|
-|84|Helipad|
-|86|Storage Tank|
-|89|Shipping container lot|
-|91|Shipping Container|
-|93|Pylon|
-|94|Tower|
+see [labels.txt](chipper/src/main/resources/labels.txt)
 
 ### nvidia docker
 - install nvidia-docker
@@ -132,7 +73,13 @@ The json is easier to work with when partitioned
 
 `for f in *.tif; do echo $f; jq --arg f "$f" '[.features[] | select(.properties.image_id == $f)]' ../xView_train.geojson > $f.geojson; done`
 
-### using minio with digits
+
+### DIGITS
+
+- https://developer.nvidia.com/digits
+- https://devblogs.nvidia.com/deep-learning-object-detection-digits/
+
+#### with minio
 
 Have to adjust the boto library configuration to use the non-subdomain s3 urls
 
@@ -143,7 +90,8 @@ Mount this as `/etc/boto.cfg`
 calling_format=boto.s3.connection.OrdinaryCallingFormat
 ```
 
-### digits image formats
+#### image/label formats
 
+- https://github.com/NVIDIA/DIGITS/issues/992
 - https://github.com/NVIDIA/DIGITS/blob/master/docs/ImageFolderFormat.md
-- PNG, JPEG, BMP and PPM
+  - PNG, JPEG, BMP and PPM
