@@ -10,12 +10,13 @@ import akka.stream.scaladsl.{FileIO, JsonFraming, Sink, Source}
 import akka.util.ByteString
 import com.github.jw3.xview.common.MakeChips.{FChip, FeatureData, _}
 import geotrellis.raster
+import geotrellis.raster.RasterExtent
 import geotrellis.raster.io.geotiff.MultibandGeoTiff
 import geotrellis.raster.io.geotiff.reader.GeoTiffReader
 import geotrellis.vector.io.json.FeatureFormats._
 import geotrellis.vector.io.json.GeoJson
 import geotrellis.vector.io.json.GeometryFormats._
-import geotrellis.vector.{Feature, Polygon}
+import geotrellis.vector.{Extent, Feature, Polygon}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -87,13 +88,8 @@ object ProcessTile {
         .map(bs ⇒ GeoJson.parse[Feature[Polygon, FeatureData]](bs.utf8String))
         .filter(f ⇒ filter.isEmpty || filter.contains(f.data.type_id))
         .map { fd ⇒
-          val re = raster.RasterExtent(tif.tile, tif.extent)
-          val ext = fd.geom.envelope
-          val l = KittiLabel(s"${fd.data.type_id}",
-                             re.mapXToGrid(ext.xmin),
-                             re.mapYToGrid(ext.ymin),
-                             re.mapXToGrid(ext.xmax),
-                             re.mapYToGrid(ext.ymax))
+          val re = RasterExtent(Extent(fd.geom.envelope.jtsEnvelope), tif.cellSize)
+          val l = KittiLabel(s"${fd.data.type_id}", 0, 0, re.cols, re.rows)
           FLabel(fd, KittiLabel.toRow(l))
         }
         .map(c ⇒ c.f → ByteString(c.l))
