@@ -58,14 +58,14 @@ object ProcessTile {
         .mapConcat { fd ⇒
           crop(FChip(fd, tif))
         }
-        .map(c ⇒ c.f → ByteString(c.t.toByteArray))
+        .map(c ⇒ c.f → ByteString(c.t.tile.renderPng().bytes))
         .mapAsync(1)(
           t ⇒
             Source
               .single(t._2)
               .runWith(s3Client
                 .multipartUpload(to.bucket,
-                                 chippedFileWithType(num, t._1.data.feature_id, "tif", t._1.data.type_id, to.path))))
+                                 chippedFileWithType(num, t._1.data.feature_id, "png", t._1.data.type_id, to.path))))
         .runWith(Sink.ignore)
       f.onComplete {
         case Success(_) if ref != ActorRef.noSender ⇒ ref ! Complete(num)
