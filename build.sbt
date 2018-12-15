@@ -20,6 +20,7 @@ lazy val chipper =
     .settings(commonSettings: _*)
     .settings(name := "chip")
     .settings(debianSettings: _*)
+    .settings(dockerSettings: _*)
     .enablePlugins(JavaServerAppPackaging, DebianPlugin, DockerPlugin, GitVersioning)
 
 lazy val cluster =
@@ -82,8 +83,11 @@ lazy val commonSettings = Seq(
 
 lazy val dockerSettings = Seq(
   packageName in Docker := "xview-cluster",
-  dockerBaseImage := sys.env.getOrElse("BASE_IMAGE", "openjdk:8"),
-  dockerUpdateLatest := true
+  dockerBaseImage := sys.env.getOrElse("BASE_IMAGE", "openjdk:8-jre-slim"),
+  daemonGroup in Docker := "root",
+  dockerEntrypoint := Seq(),
+  dockerUpdateLatest := true,
+  dockerEnvVars += "PATH" → "$PATH:/opt/docker/bin"
 )
 
 lazy val debianSettings = Seq(
