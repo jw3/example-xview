@@ -1,0 +1,20 @@
+stages:
+  - publish
+
+all:
+  stage: publish
+  script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+
+    - ./build.sh
+
+    - docker push $CI_REGISTRY_IMAGE
+    - docker push $CI_REGISTRY_IMAGE/chipper
+
+    - docker rmi $CI_REGISTRY_IMAGE
+    - docker rmi $CI_REGISTRY_IMAGE/chipper
+
+  only:
+    - master
+  tags:
+    - sbt

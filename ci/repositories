@@ -1,0 +1,5 @@
+[repositories]
+ maven-remotes: http://artifactory.ctc.com/remote-repos/
+ sbt-plugins: http://artifactory.ctc.com/sbt-plugin-releases/, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
+ typesafe-ivys: http://artifactory.ctc.com/typesafe-ivy-releases/, [organization]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
+
