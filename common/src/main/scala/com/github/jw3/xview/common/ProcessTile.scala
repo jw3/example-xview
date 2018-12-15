@@ -94,7 +94,6 @@ object ProcessTile {
                              re.mapYToGrid(ext.ymin),
                              re.mapXToGrid(ext.xmax),
                              re.mapYToGrid(ext.ymax))
-          println(l)
           FLabel(fd, KittiLabel.toRow(l))
         }
         .map(c ⇒ c.f → ByteString(c.l))
