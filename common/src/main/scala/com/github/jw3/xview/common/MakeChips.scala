@@ -9,6 +9,7 @@ import spray.json.RootJsonFormat
 
 object MakeChips {
   type PolygonFeature = Feature[Polygon, FeatureData]
+  case class FLabel(f: PolygonFeature, l: String, name: Option[String] = None)
   case class FChip(f: PolygonFeature, t: MultibandGeoTiff, name: Option[String] = None)
 
   case class FeatureData(feature_id: Int, type_id: Int, image_id: String)
